@@ -140,6 +140,8 @@ typedef enum {
     HINT_SPECULAR,
 } pal_hint_kind_t;
 
+typedef float (*pal_color_compare_func_t)(pal_color_t col0, pal_color_t col1, void* datum);
+
 typedef struct {
     int       num_indices;
     pal_u16_t indices[PAL_MAX_GRADIENT_INDICES];
@@ -206,6 +208,31 @@ const char* pal_string_for_hint(pal_hint_kind_t hint);
 // out_buf_len being the length of that buffer.
 int pal_emit_palette_json(const pal_palette_t* pals, int num_pals, char* out_buf, int out_buf_len);
 
+// add a new gradient to *pal that contains every color in
+// the palette, sorted by some criteria.
+//
+// the sort criteria function 'func' is one of the builtins:
+// pal_hue_cb  pal_saturation_cb pal_value_cb pal_lightness_cb
+// pal_red_cb pal_green_cb pal_blue_cb pal_alpha_cb
+//
+// or implement your own.
+//
+// datum is arbitrary data to access in the callback.  NULL on
+// all builtins callbacks.
+int pal_create_sorted_gradient(pal_palette_t*           pal,
+                               const char*              gradient_name,
+                               pal_color_compare_func_t cb,
+                               void*                    datum);
+
+/* callbacks for pal_create_sorted_gradient */
+float pal_red_cb(pal_color_t col0, pal_color_t col1, void* datum);
+float pal_green_cb(pal_color_t col0, pal_color_t col1, void* datum);
+float pal_blue_cb(pal_color_t col0, pal_color_t col1, void* datum);
+float pal_hue_cb(pal_color_t col0, pal_color_t col1, void* datum);
+float pal_saturation_cb(pal_color_t col0, pal_color_t col1, void* datum);
+float pal_value_cb(pal_color_t col0, pal_color_t col1, void* datum);
+float pal_lightness_cb(pal_color_t col0, pal_color_t col1, void* datum);
+
 //
 // End of header file
 //
@@ -213,6 +240,8 @@ int pal_emit_palette_json(const pal_palette_t* pals, int num_pals, char* out_buf
 
 /* implemetnation */
 #if defined(FTG_IMPLEMENT_PALETTE)
+
+#define PAL__UNUSED(x) ((void)x)
 
 #ifndef PAL_TIME
 #    include <time.h>
@@ -364,9 +393,6 @@ pal_emit_palette_json(const pal_palette_t* pals, int num_pals, char* out_buf, in
         char                 num_buf[64];
         char*                p_num_buf;
 
-        // todo: UID field that hashes all colors
-
-
         // palette sub-document
         PAL__APPEND_TABS(tab++);
         PAL__APPEND("{\n");
@@ -440,9 +466,11 @@ pal_emit_palette_json(const pal_palette_t* pals, int num_pals, char* out_buf, in
 
 
         tab++;
+        int total_hints = 0;
         for (j = 0; j < pal->num_colors; j++) {
             // ex: "red": [
             if (pal->num_hints[j] > 0) {
+                total_hints++;
                 PAL__APPEND_TABS(tab);
                 PAL__APPEND("\"");
                 PAL__APPEND(pal->color_names[j]);
@@ -466,7 +494,8 @@ pal_emit_palette_json(const pal_palette_t* pals, int num_pals, char* out_buf, in
 
         // end hints
         // walk back over the trailing comma, then add the newline back in
-        out_buf -= 2, out_buf_remaining -= 2;
+        if (total_hints != 0)
+            out_buf -= 2, out_buf_remaining -= 2;
         PAL__APPEND("\n");
 
         tab--;
@@ -729,6 +758,58 @@ pal__get_rgb(float h, float s, float v, float* r, float* g, float* b)
 
     return 0;
 }
+
+static float
+pal__max3(float a, float b, float c)
+{
+    float r = a;
+    if (r < b)
+        r = b;
+    if (r < c)
+        r = c;
+    return r;
+}
+
+static float
+pal__min3(float a, float b, float c)
+{
+    float r = a;
+    if (r > b)
+        r = b;
+    if (r > c)
+        r = c;
+    return r;
+}
+
+static void
+pal__get_hsv(float r, float g, float b, float* h, float* s, float* v)
+{
+    float max_chan = pal__max3(r, g, b);
+    float min_chan = pal__min3(r, g, b);
+    float delta;
+
+    *v = max_chan;
+
+    *s = (max_chan != 0.0f) ? ((max_chan - min_chan) / max_chan) : 0.0f;
+
+    if (*s == 0.0f) {
+        *h = 360.f * 2; /* undefined */
+    } else {
+        delta = max_chan - min_chan;
+
+        if (r == max_chan)
+            *h = (g - b) / delta; /* Color between yellow and magenta */
+        else if (g == max_chan)
+            *h = 2.0f + (b - r) / delta; /* Color between cyan and yellow */
+        else if (b == max_chan)
+            *h = 4.0f + (r - g) / delta; /* Color between magenta and cyan */
+
+        *h *= 60.0f; /* Convert hue to degrees */
+        if (*h < 0.0f)
+            *h += 360.0f;
+    }
+}
+
 
 
 static int
@@ -1006,6 +1087,144 @@ pal_hash_color_values(const pal_palette_t* pal)
 }
 
 
+int
+pal_create_sorted_gradient(pal_palette_t*           pal,
+                           const char*              gradient_name,
+                           pal_color_compare_func_t compare_callback,
+                           void*                    datum)
+{
+    PAL__UNUSED(datum);
+    int i, j;
+    if (pal->num_gradients >= PAL_MAX_GRADIENTS) {
+        PAL__ASSERT(!"no space for more gradients");
+        return 1;
+    }
+
+    // work on the stack to avoid altering the palette until success
+    // is assured
+    pal_gradient_t gradient;
+    int            len = pal->num_colors;
+    gradient.num_indices = len;
+    for (i = 0; i < len; i++) {
+        gradient.indices[i] = i;
+    }
+
+    // lame bubble sort
+    for (i = 0; i < len - 1; i++) {
+        for (j = 0; j < len - i - 1; j++) {
+            if (compare_callback(pal->colors[gradient.indices[j]],
+                                 pal->colors[gradient.indices[j + 1]],
+                                 NULL) > 0.0f) {
+                // todo: handle alpha full transparency case without the callback
+
+                pal_u16_t temp = gradient.indices[j];
+                gradient.indices[j] = gradient.indices[j + 1];
+                gradient.indices[j + 1] = temp;
+            }
+        }
+    }
+
+#if 0
+    for (i = 0; i < len; i++) {
+        pal_color_t col = pal->colors[gradient.indices[i]];
+        float       h, s, v;
+        pal__get_hsv(col.rgba.r, col.rgba.g, col.rgba.b, &h, &s, &v);
+        printf("Color %s   r%.4f g%.4f b%.4f a%.4f: hue %f\n",
+               pal->color_names[gradient.indices[i]],
+               col.rgba.r,
+               col.rgba.g,
+               col.rgba.b,
+               col.rgba.a,
+               h);
+    }
+#endif
+
+    // success
+    pal->gradients[pal->num_gradients] = gradient;
+    pal__strncpy(pal->gradient_names[pal->num_gradients], gradient_name, PAL_MAX_STRLEN);
+    pal->num_gradients++;
+    return 0;
+}
+
+float
+pal_red_cb(pal_color_t col0, pal_color_t col1, void* datum)
+{
+    PAL__UNUSED(datum);
+    return col1.rgba.r - col0.rgba.r;
+}
+
+float
+pal_green_cb(pal_color_t col0, pal_color_t col1, void* datum)
+{
+    PAL__UNUSED(datum);
+    return col1.rgba.g - col0.rgba.g;
+}
+
+float
+pal_blue_cb(pal_color_t col0, pal_color_t col1, void* datum)
+{
+    PAL__UNUSED(datum);
+    return col1.rgba.b - col0.rgba.b;
+}
+
+float
+pal_hue_cb(pal_color_t col0, pal_color_t col1, void* datum)
+{
+    PAL__UNUSED(datum);
+
+    float hue0, sat0, val0;
+    float hue1, sat1, val1;
+    pal__get_hsv(col0.c[0], col0.c[1], col0.c[2], &hue0, &sat0, &val0);
+    pal__get_hsv(col1.c[0], col1.c[1], col1.c[2], &hue1, &sat1, &val1);
+
+    return hue1 - hue0;
+}
+
+float
+pal_saturation_cb(pal_color_t col0, pal_color_t col1, void* datum)
+{
+    PAL__UNUSED(datum);
+
+    float hue0, sat0, val0;
+    float hue1, sat1, val1;
+    pal__get_hsv(col0.c[0], col0.c[1], col0.c[2], &hue0, &sat0, &val0);
+    pal__get_hsv(col1.c[0], col1.c[1], col1.c[2], &hue1, &sat1, &val1);
+
+    return sat1 - sat0;
+}
+
+float
+pal_value_cb(pal_color_t col0, pal_color_t col1, void* datum)
+{
+    PAL__UNUSED(datum);
+
+    float hue0, sat0, val0;
+    float hue1, sat1, val1;
+    pal__get_hsv(col0.c[0], col0.c[1], col0.c[2], &hue0, &sat0, &val0);
+    pal__get_hsv(col1.c[0], col1.c[1], col1.c[2], &hue1, &sat1, &val1);
+
+    return val1 - val0;
+}
+
+float
+pal_lightness_cb(pal_color_t col0, pal_color_t col1, void* datum)
+{
+    float col0_lightness, col1_lightness;
+
+    {
+        float val_max = pal__max3(col0.c[0], col0.c[1], col0.c[2]);
+        float val_min = pal__min3(col0.c[0], col0.c[1], col0.c[2]);
+        col0_lightness = (val_max + val_min) / 2.0f;
+    }
+
+    {
+        float val_max = pal__max3(col1.c[0], col1.c[1], col1.c[2]);
+        float val_min = pal__min3(col1.c[0], col1.c[1], col1.c[2]);
+        col1_lightness = (val_max + val_min) / 2.0f;
+    }
+
+    return col1_lightness - col0_lightness;
+}
 
 //
 // Test suite

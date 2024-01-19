@@ -13,11 +13,11 @@
 #include "3rdparty/stb_image_write.h"
 
 struct args_s {
-    const char *in_file;
-    const char *out_file;
-    bool verbose;
-    bool help_supported;
-}args;
+    const char* in_file;
+    const char* out_file;
+    bool        verbose;
+    bool        help_supported;
+} args;
 
 #define LOG_WARNING 1
 #define LOG_MSG 0
@@ -27,60 +27,103 @@ typedef enum {
     FILE_KIND_ACO,
     FILE_KIND_PNG,
     FILE_KIND_JSON_PALETTE,
-}file_kind_t;
+} file_kind_t;
 
 const file_kind_t SUPPORTED_INPUT_FORMATS[] = {FILE_KIND_ACO, 0};
-const file_kind_t SUPPORTED_OUTPUT_FORMATS[] = {FILE_KIND_JSON_PALETTE, FILE_KIND_PNG, 0};
+const file_kind_t SUPPORTED_OUTPUT_FORMATS[] = {
+    FILE_KIND_JSON_PALETTE, FILE_KIND_PNG, 0};
 
-const char *kind_to_string(file_kind_t kind) {
+const char*
+kind_to_string(file_kind_t kind)
+{
     switch (kind) {
-    case FILE_KIND_ACO: return "aco";
-    case FILE_KIND_PNG: return "png";
-    case FILE_KIND_JSON_PALETTE: return "json (palette format)";
+    case FILE_KIND_ACO:
+        return "aco";
+    case FILE_KIND_PNG:
+        return "png";
+    case FILE_KIND_JSON_PALETTE:
+        return "json (palette format)";
     default:
         return "unknown";
     }
 }
 
-void fatal(const char *msg) {
+void
+fatal(const char* msg)
+{
     fprintf(stderr, "fatal: %s\n", msg);
     exit(1);
 }
 
-void print(int level, const char *msg) {
+void
+print(int level, const char* msg)
+{
     if (level == 1 || args.verbose) {
         puts(msg);
     }
 }
 
-void print_header(void) {
-    printf("palettetool\n\ta command-line pipeline tool to convert between palette formats\n");
+void
+print_header(void)
+{
+    printf("palettetool\n\ta command-line pipeline tool to convert between "
+           "palette formats\n");
     printf("Copyright (C) 2024 Frogtoss Games, Inc.\n");
 }
 
 
-file_kind_t file_kind_for_extension(const char *path) {
-    const char *ext = ftg_get_filename_ext(path);
+file_kind_t
+file_kind_for_extension(const char* path)
+{
+    const char* ext = ftg_get_filename_ext(path);
 
     if (*ext == '\0')
         return FILE_KIND_UNKNOWN;
 
-    if (ftg_stricmp(ext, "aco")==0)
+    if (ftg_stricmp(ext, "aco") == 0)
         return FILE_KIND_ACO;
 
-    if (ftg_stricmp(ext, "json")==0)
+    if (ftg_stricmp(ext, "json") == 0)
         return FILE_KIND_JSON_PALETTE;
 
-    if (ftg_stricmp(ext, "png")==0)
+    if (ftg_stricmp(ext, "png") == 0)
         return FILE_KIND_PNG;
 
     return FILE_KIND_UNKNOWN;
 }
 
+int
+add_full_palette_gradients(pal_palette_t* palette)
+{
+    int result =
+        pal_create_sorted_gradient(palette, "sort by red channel", pal_red_cb, NULL);
 
-void print_supported_kinds(void) {
+    result |= pal_create_sorted_gradient(
+        palette, "sort by green channel", pal_green_cb, NULL);
+
+    result |=
+        pal_create_sorted_gradient(palette, "sort by blue channel", pal_blue_cb, NULL);
+
+    result |= pal_create_sorted_gradient(palette, "sort by hue", pal_hue_cb, NULL);
+
+    result |= pal_create_sorted_gradient(
+        palette, "sort by saturation", pal_saturation_cb, NULL);
+
+    result |= pal_create_sorted_gradient(palette, "sort by value", pal_value_cb, NULL);
+
+    result |= pal_create_sorted_gradient(
+        palette, "sort by lightness", pal_lightness_cb, NULL);
+
+    FTG_ASSERT(result == 0);
+
+    return result;
+}
+
+void
+print_supported_kinds(void)
+{
     printf("supported input formats:\n");
-    const file_kind_t *kind = &SUPPORTED_INPUT_FORMATS[0];
+    const file_kind_t* kind = &SUPPORTED_INPUT_FORMATS[0];
     while (*kind) {
         printf(" - .%s\n", kind_to_string(*kind));
         kind++;
@@ -93,15 +136,15 @@ void print_supported_kinds(void) {
         printf(" - .%s\n", kind_to_string(*kind));
         kind++;
     }
-
 }
 
-int main(int argc, char *argv[]) {
-
+int
+main(int argc, char* argv[])
+{
     kgflags_string("in", NULL, "file to convert", true, &args.in_file);
     kgflags_string("out", NULL, "file to export to (will overwrite)", true, &args.out_file);
     kgflags_bool("verbose", false, "log verbosity", false, &args.verbose);
-;
+    ;
 
     if (!kgflags_parse(argc, argv)) {
         print_header();
@@ -127,21 +170,18 @@ int main(int argc, char *argv[]) {
     pal_palette_t palette = {0};
 
     switch (in_kind) {
-    case FILE_KIND_ACO:
-        {
-            ftg_off_t aco_len;
-            u8 *aco_bytes = ftg_file_read(args.in_file, false, &aco_len);
-            if (aco_bytes == NULL)
-                fatal(ftg_va("failed to read '%s'", args.in_file));
+    case FILE_KIND_ACO: {
+        ftg_off_t aco_len;
+        u8*       aco_bytes = ftg_file_read(args.in_file, false, &aco_len);
+        if (aco_bytes == NULL)
+            fatal(ftg_va("failed to read '%s'", args.in_file));
 
-            int result = pal_parse_aco(aco_bytes, (unsigned int)aco_len, &palette,
-                                       NULL);
-            FTG_FREE(aco_bytes);
-            if (result != 0) {
-                fatal(ftg_va("failed to parse '%s'", args.in_file));
-            }
+        int result = pal_parse_aco(aco_bytes, (unsigned int)aco_len, &palette, NULL);
+        FTG_FREE(aco_bytes);
+        if (result != 0) {
+            fatal(ftg_va("failed to parse '%s'", args.in_file));
         }
-        break;
+    } break;
 
     default:
         fatal("Unsupported input kind. Only 'ACO' is currently supported");
@@ -150,51 +190,49 @@ int main(int argc, char *argv[]) {
     //
     // write file
     switch (out_kind) {
-    case FILE_KIND_JSON_PALETTE:
-        {
-            usize output_buf_bytes = (1 << 13);
-            char *buf = FTG_MALLOC(sizeof(u8), output_buf_bytes);
+    case FILE_KIND_JSON_PALETTE: {
+        int result = add_full_palette_gradients(&palette);
 
-            int result = pal_emit_palette_json(&palette, 1, buf, output_buf_bytes);
-            if (result != 0)
-                fatal("failed to generate json palette");
+        usize output_buf_bytes = (1 << 15);
+        char* buf = FTG_MALLOC(sizeof(u8), output_buf_bytes);
 
-            result = ftg_file_write(args.out_file, (u8*)buf, strlen(buf)+1);
-            if (result == 0)
-                fatal(ftg_va("failed to write json palette to '%s'", args.out_file));
+        result = pal_emit_palette_json(&palette, 1, buf, output_buf_bytes);
+        if (result != 0)
+            fatal("failed to generate json palette");
 
-            FTG_FREE(buf);
-        }
-        break;
+        result = ftg_file_write(args.out_file, (u8*)buf, strlen(buf) + 1);
+        if (result == 0)
+            fatal(ftg_va("failed to write json palette to '%s'", args.out_file));
 
-    case FILE_KIND_PNG:
-        {
-            // create rgba color row from palette
-            u8 *image_data = FTG_MALLOC(sizeof(u8), 4 * palette.num_colors);
-            u8 *p = image_data;
+        FTG_FREE(buf);
+    } break;
 
-            for (int i = 0; i < palette.num_colors; i++) {
-                for (int j = 0; j < 4; j++) {
-                    u8 chan = pal_convert_channel_to_8bit(palette.colors[i].c[j]);
-                    *p++ = chan;
-                    puts("");
-                }
+    case FILE_KIND_PNG: {
+        // create rgba color row from palette
+        u8* image_data = FTG_MALLOC(sizeof(u8), 4 * palette.num_colors);
+        u8* p = image_data;
+
+        for (int i = 0; i < palette.num_colors; i++) {
+            for (int j = 0; j < 4; j++) {
+                u8 chan = pal_convert_channel_to_8bit(palette.colors[i].c[j]);
+                *p++ = chan;
             }
-
-            int result = stbi_write_png(args.out_file,
-                                        palette.num_colors, 1, 4,
-                                        image_data, palette.num_colors);
-            if (result == 0) {
-                fatal(ftg_va("failed to write png file to '%s'", args.out_file));
-            }
-
-            FTG_FREE(image_data);
         }
 
-        break;
+        int result = stbi_write_png(
+            args.out_file, palette.num_colors, 1, 4, image_data, palette.num_colors);
+        if (result == 0) {
+            fatal(ftg_va("failed to write png file to '%s'", args.out_file));
+        }
+
+        FTG_FREE(image_data);
+    }
+
+    break;
 
     default:
-        fatal("Unsupported output kind. Only json palette is currently supported");
+        fatal("Unsupported output kind. Only json palette is currently "
+              "supported");
     }
 
     print(LOG_MSG, "success.");
