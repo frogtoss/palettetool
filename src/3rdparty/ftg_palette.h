@@ -31,7 +31,6 @@
    Special thanks to Sean T. Barrett (@nothings) for the idea to use single
    header format for libraries.
 */
-
 #ifndef PAL__INCLUDE_PALETTE_H
 #define PAL__INCLUDE_PALETTE_H
 

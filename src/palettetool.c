@@ -1,5 +1,6 @@
 /* palettetool Copyright (C) 2024 Frogtoss Games, Inc. */
 
+
 #define FTG_IMPLEMENT_PALETTE
 #define FTG_IMPLEMENT_CORE
 #define KGFLAGS_IMPLEMENTATION
@@ -11,13 +12,17 @@
 #include "3rdparty/ftg_palette.h"
 #include "3rdparty/kgflags.h"
 #include "3rdparty/stb_image_write.h"
+#include "3rdparty/jsmn.h"
 
 struct args_s {
     const char* in_file;
     const char* out_file;
     bool        verbose;
     bool        help_supported;
+
     const char* png_sort_kind;
+
+    int json_palette_index;
 } args;
 
 #define LOG_WARNING 1
@@ -30,9 +35,19 @@ typedef enum {
     FILE_KIND_JSON_PALETTE,
 } file_kind_t;
 
-const file_kind_t SUPPORTED_INPUT_FORMATS[] = {FILE_KIND_ACO, 0};
+const file_kind_t SUPPORTED_INPUT_FORMATS[] = {FILE_KIND_ACO, FILE_KIND_JSON_PALETTE, 0};
 const file_kind_t SUPPORTED_OUTPUT_FORMATS[] = {
     FILE_KIND_JSON_PALETTE, FILE_KIND_PNG, 0};
+
+int parse_json_into_palettes(const char*    json_str,
+                             usize          json_strlen,
+                             pal_palette_t* out_palettes,
+
+                             int first_palette,
+                             int num_palettes,
+
+                             char out_error_message[PAL_MAX_STRLEN],
+                             int* out_error_start);
 
 const char*
 kind_to_string(file_kind_t kind)
@@ -159,7 +174,6 @@ get_export_gradient_from_sort_kind(pal_palette_t* pal, const char* sort_kind)
         goto end;
     }
 
-
     // this adds a gradient called "export me" in-place
     int result = 0;
     SORT_BASED_ON_NAME_IF_MATCH(red);
@@ -187,6 +201,11 @@ main(int argc, char* argv[])
                    "blue, hue, saturation, value, brightness)",
                    false,
                    &args.png_sort_kind);
+    kgflags_int("json-palette-index",
+                0,
+                "palette to parse in the json doc (starting from 0)",
+                false,
+                &args.json_palette_index);
 
 
     if (!kgflags_parse(argc, argv)) {
@@ -226,6 +245,34 @@ main(int argc, char* argv[])
         }
     } break;
 
+    case FILE_KIND_JSON_PALETTE: {
+        ftg_off_t json_strlen;
+        u8*       json_string = ftg_file_read(args.in_file, true, &json_strlen);
+
+        char error_message[PAL_MAX_STRLEN] = {0};
+        int  error_location;
+
+        int result = parse_json_into_palettes((char*)json_string,
+                                              json_strlen,
+                                              &palette,
+
+                                              args.json_palette_index,
+                                              1,
+
+                                              error_message,
+                                              &error_location);
+        if (result != 0) {
+            fatal(ftg_va("Failed to parse json: '%s' at char offset %d",
+                         error_message,
+                         error_location));
+        }
+
+        FTG_FREE(json_string);
+        if (palette.num_colors == 0) {
+            fatal("parsed palette has 0 colors");
+        }
+    } break;
+
     default:
         fatal("Unsupported input kind. Only 'ACO' is currently supported");
     }
@@ -254,7 +301,6 @@ main(int argc, char* argv[])
         // create rgba color row from palette
         u8* image_data = FTG_MALLOC(sizeof(u8), 4 * palette.num_colors);
         u8* p = image_data;
-
 
         pal_gradient_t* gradient =
             get_export_gradient_from_sort_kind(&palette, args.png_sort_kind);
@@ -288,3 +334,5 @@ main(int argc, char* argv[])
 
     return 0;
 }
+
+#include "inline/parse_json.c"
