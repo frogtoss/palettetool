@@ -134,26 +134,24 @@ jsondumptok(json_context_t* ctx, int i)
 {
     jsmntok_t* tok = &ctx->tok[i];
     printf("token %d\n", i);
-    switch (tok[i].type) {
+    switch (tok->type) {
     case JSMN_UNDEFINED:
         printf("tok undefined\n");
         break;
     case JSMN_OBJECT:
-        printf("tok object " JSON_ATTRIBS, tok[i].start, tok[i].end, tok[i].size);
+        printf("tok object " JSON_ATTRIBS, tok->start, tok->end, tok->size);
         break;
     case JSMN_ARRAY:
-        printf("tok array " JSON_ATTRIBS, tok[i].start, tok[i].end, tok[i].size);
+        printf("tok array " JSON_ATTRIBS, tok->start, tok->end, tok->size);
         break;
 
     case JSMN_STRING:
-        printf("tok string " JSON_ATTRIBS, tok[i].start, tok[i].end, tok[i].size);
-        printf("contents: '%.*s'\n",
-               tok[i].end - tok[i].start,
-               ctx->str + tok[i].start);
+        printf("tok string " JSON_ATTRIBS, tok->start, tok->end, tok->size);
+        printf("contents: '%.*s'\n", tok->end - tok->start, ctx->str + tok->start);
         break;
 
     case JSMN_PRIMITIVE:
-        printf("tok primitive " JSON_ATTRIBS, tok[i].start, tok[i].end, tok[i].size);
+        printf("tok primitive " JSON_ATTRIBS, tok->start, tok->end, tok->size);
         break;
 
     default:
@@ -162,6 +160,47 @@ jsondumptok(json_context_t* ctx, int i)
 }
 #endif
 
+
+int
+parse_palette_source_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
+{
+    int source_subdoc_tokens = ctx->tok[*i].size * 2;
+
+
+    json_match(ctx, JSMN_OBJECT, i);       // skip into object's first token
+    int last = *i + source_subdoc_tokens;  // todo: debug this
+    for (; *i < last; (*i)++) {
+        const int iter_start = *i;
+
+        if (*i == iter_start &&
+            json_write_value_on_match_key(
+                ctx, "conversion_tool", i, pal->source.conversion_tool, PAL_MAX_STRLEN) != 0)
+            return 1;
+
+        if (*i == iter_start && json_write_value_on_match_key(
+                                    ctx, "url", i, pal->source.url, PAL_MAX_STRLEN) != 0)
+            return 1;
+
+        // todo: next: parse this into a u32
+        char fixme_buf[PAL_MAX_STRLEN];
+        if (*i == iter_start &&
+            json_write_value_on_match_key(
+                ctx, "conversion_date", i, fixme_buf, PAL_MAX_STRLEN) != 0)
+            return 1;
+
+
+        // if i hasn't advanced in this loop, it is an unmatched token.
+        if (*i == iter_start) {
+            printf("unmatched token:\n");
+            jsondumptok(ctx, *i);
+            puts("");
+            json_error(ctx, "unexpected token", *i);
+            return 1;
+        }
+    }
+
+    return 0;
+}
 
 int
 parse_json_into_palettes(const char*    json_str,
@@ -225,16 +264,19 @@ end_search:
 
     // parse single palette
     int            pal_num = 0;
-    pal_palette_t* pal = &out_palettes[pal_num];
+    pal_palette_t* pal = &out_palettes[pal_num];  // todo: zero initialize
 
     int palette_subdoc_tokens = ctx.tok[i].size * 2;
     if (json_match(&ctx, JSMN_OBJECT, &i) != 0)
         return 1;
 
     // scan until end of object
+
+    // fixme: palette_subdoc_tokens should be offset by i at start
+    // see palette_source_subobject 'last'
     for (; i < palette_subdoc_tokens; i++) {
         const int iter_start = i;  // i == iter_start: no token consumption yet
-        char      buf[PAL_MAX_STRLEN];
+        // char      buf[PAL_MAX_STRLEN];
 
 
         if (i == iter_start && json_write_value_on_match_key(
@@ -243,6 +285,15 @@ end_search:
 
         if (i == iter_start && jsoneq(&ctx, i, "color_hash") == 0)
             i++;  // acceptable key/value, but has no analog field
+
+        if (i == iter_start && jsoneq(&ctx, i, "source") == 0) {
+            jsonskip(&ctx, &i, 0);
+            if (json_expect(&ctx, JSMN_OBJECT, i) != 0)
+                return 1;
+
+            if (parse_palette_source_subobject(&ctx, &i, pal) != 0)
+                return 1;
+        }
 
 #if 0
         // color_hash isn't a field
