@@ -1115,8 +1115,6 @@ pal_create_sorted_gradient(pal_palette_t*           pal,
             if (compare_callback(pal->colors[gradient.indices[j]],
                                  pal->colors[gradient.indices[j + 1]],
                                  NULL) > 0.0f) {
-                // todo: handle alpha full transparency case without the callback
-
                 pal_u16_t temp = gradient.indices[j];
                 gradient.indices[j] = gradient.indices[j + 1];
                 gradient.indices[j + 1] = temp;

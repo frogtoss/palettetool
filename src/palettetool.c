@@ -17,6 +17,7 @@ struct args_s {
     const char* out_file;
     bool        verbose;
     bool        help_supported;
+    const char* png_sort_kind;
 } args;
 
 #define LOG_WARNING 1
@@ -138,13 +139,55 @@ print_supported_kinds(void)
     }
 }
 
+#define SORT_BASED_ON_NAME_IF_MATCH(n)                                              \
+    if (ftg_stricmp(sort_kind, #n) == 0) {                                          \
+        result |= pal_create_sorted_gradient(pal, "export_me", pal_##n##_cb, NULL); \
+    }
+
+pal_gradient_t*
+get_export_gradient_from_sort_kind(pal_palette_t* pal, const char* sort_kind)
+{
+    // common case: no sort requested by user
+    int grad_idx = pal->num_gradients;
+    if (!sort_kind) {
+        for (int i = 0; i < pal->num_colors; i++) {
+            pal->gradients[grad_idx].indices[i] = i;
+        }
+        strcpy(pal->gradient_names[pal->num_gradients], "export_me");
+        pal->gradients[grad_idx].num_indices = pal->num_colors;
+        pal->num_gradients++;
+        goto end;
+    }
+
+
+    // this adds a gradient called "export me" in-place
+    int result = 0;
+    SORT_BASED_ON_NAME_IF_MATCH(red);
+    SORT_BASED_ON_NAME_IF_MATCH(green);
+    SORT_BASED_ON_NAME_IF_MATCH(blue);
+    SORT_BASED_ON_NAME_IF_MATCH(hue);
+    SORT_BASED_ON_NAME_IF_MATCH(saturation);
+    SORT_BASED_ON_NAME_IF_MATCH(value);
+    SORT_BASED_ON_NAME_IF_MATCH(lightness);
+    FTG_ASSERT(result == 0);
+
+end:
+    return &pal->gradients[grad_idx];
+}
+
 int
 main(int argc, char* argv[])
 {
     kgflags_string("in", NULL, "file to convert", true, &args.in_file);
     kgflags_string("out", NULL, "file to export to (will overwrite)", true, &args.out_file);
     kgflags_bool("verbose", false, "log verbosity", false, &args.verbose);
-    ;
+    kgflags_string("sort-png",
+                   NULL,
+                   "when exporting as png, use a sort (supported: red, green, "
+                   "blue, hue, saturation, value, brightness)",
+                   false,
+                   &args.png_sort_kind);
+
 
     if (!kgflags_parse(argc, argv)) {
         print_header();
@@ -212,10 +255,16 @@ main(int argc, char* argv[])
         u8* image_data = FTG_MALLOC(sizeof(u8), 4 * palette.num_colors);
         u8* p = image_data;
 
-        for (int i = 0; i < palette.num_colors; i++) {
+
+        pal_gradient_t* gradient =
+            get_export_gradient_from_sort_kind(&palette, args.png_sort_kind);
+        FTG_ASSERT_ALWAYS(gradient->num_indices == palette.num_colors);
+
+        for (int i = 0; i < gradient->num_indices; i++) {
             for (int j = 0; j < 4; j++) {
-                u8 chan = pal_convert_channel_to_8bit(palette.colors[i].c[j]);
-                *p++ = chan;
+                float chan32 = palette.colors[gradient->indices[i]].c[j];
+                u8    chan8 = pal_convert_channel_to_8bit(chan32);
+                *p++ = chan8;
             }
         }
 
