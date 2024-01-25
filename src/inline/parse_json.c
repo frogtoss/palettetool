@@ -37,11 +37,27 @@ jsoneq(json_context_t* ctx, int i, const char* s)
     return -1;
 }
 
+static void
+json_skip(const json_context_t* ctx, int* i)
+{
+    for (int char_end = ctx->tok[*i].end;
+         *i < ctx->num_tokens && ctx->tok[*i].start < char_end;
+         (*i)++)
+        ;  // pass
+}
+
+#if 0
+// keeping this around as a good example of how to recurse tokens, but
+// it's not necessary after I figured out the json_skip trick
+
 // *i will point to the next token after a dict or array, recursively skipping
 // all tokens including nested dictionaries and arrays
 static void
 jsonskip(const json_context_t* ctx, int* i, int depth)
 {
+    json_skip2(ctx, i);
+    return;
+
     if (*i >= ctx->num_tokens)
         return;
 
@@ -64,12 +80,15 @@ jsonskip(const json_context_t* ctx, int* i, int depth)
     if (depth == 0)
         (*i)++;
 }
+#endif
+
 
 static void
 json_error(json_context_t* ctx, const char* error, int i)
 {
     pal__strncpy(ctx->parse_error, error, PAL_MAX_STRLEN);
     *ctx->error_start = ctx->tok[i].start;
+    FTG_ASSERT(!"break on error");
 }
 
 // check if token is of type, setting error if it doesn't
@@ -116,7 +135,7 @@ json_write_value_str_on_match_key(
     json_context_t* ctx, const char* key, int* i, char* out_value, int max_value_len)
 {
     if (jsoneq(ctx, *i, key) == 0) {
-        jsonskip(ctx, i, 0);  // step past key
+        json_skip(ctx, i);
 
         // value for this key must be a string
         if (json_expect(ctx, JSMN_STRING, *i) != 0) {
@@ -132,6 +151,30 @@ json_write_value_str_on_match_key(
 }
 
 
+// token pointed to by *i is a string that is the name of a color in
+// pal->color_names. return the index to it.
+int
+json_token_to_palette_color_index(json_context_t*      ctx,
+                                  int                  i,
+                                  const pal_palette_t* pal,
+                                  int*                 out_index)
+{
+    const jsmntok_t* tok = &ctx->tok[i];
+    if (json_expect(ctx, JSMN_STRING, i) != 0)
+        return 1;
+
+    for (int j = 0; j < pal->num_colors; j++) {
+        if (strncmp(ctx->str + tok->start, pal->color_names[j], tok->end - tok->start) ==
+            0) {
+            *out_index = j;
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+
 // as above, but for floats
 // out_inc_on_match is incremented if the key is matched
 static int
@@ -142,7 +185,7 @@ json_write_value_float_on_match_key(json_context_t* ctx,
                                     int*            out_inc_on_match)
 {
     if (jsoneq(ctx, *i, key) == 0) {
-        jsonskip(ctx, i, 0);
+        json_skip(ctx, i);
 
         (*out_inc_on_match)++;
 
@@ -196,11 +239,11 @@ jsondumptok(json_context_t* ctx, int i)
 int
 parse_palette_source_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
 {
-    int source_subdoc_tokens = ctx->tok[*i].size * 2;
+    int obj_end_index = ctx->tok[*i].end;
 
     json_match(ctx, JSMN_OBJECT, i);  // skip into object's first token
-    int last = *i + source_subdoc_tokens;
-    for (; *i < last; (*i)++) {
+
+    for (; ctx->tok[*i].start < obj_end_index; (*i)++) {
         const int iter_start = *i;
 
         if (*i == iter_start &&
@@ -212,7 +255,7 @@ parse_palette_source_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
                                     ctx, "url", i, pal->source.url, PAL_MAX_STRLEN) != 0)
             return 1;
 
-        // todo: next: parse this into a u32
+        // todo: parse this into a u32
         char fixme_buf[PAL_MAX_STRLEN];
         if (*i == iter_start &&
             json_write_value_str_on_match_key(
@@ -239,8 +282,7 @@ parse_palette_source_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
 static int
 parse_palette_color_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
 {
-    int color_object_tokens = ctx->tok[*i].size * 2;
-    int last = *i + color_object_tokens;
+    int obj_end_index = ctx->tok[*i].end;
 
     // match into individual color subobject
     if (json_match(ctx, JSMN_OBJECT, i))
@@ -252,7 +294,8 @@ parse_palette_color_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
     FTG_ASSERT(pal->num_colors < PAL_MAX_COLORS);
 
     int channel_set_count = 0;
-    for (; *i < last; (*i)++) {
+    // for (; *i < last; (*i)++) {
+    for (; ctx->tok[*i].start < obj_end_index; (*i)++) {
         const int iter_start = *i;
 
         if (*i == iter_start &&
@@ -301,6 +344,11 @@ parse_palette_color_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
         return 1;
     }
 
+    if (ctx->tok[*i].start < obj_end_index) {
+        json_error(ctx, "invalid token type found in color subobject", *i);
+        return 1;
+    }
+
     pal->num_colors++;
 
     (*i)--;
@@ -311,6 +359,7 @@ static int
 parse_palette_colors_subarray(json_context_t* ctx, int* i, pal_palette_t* pal)
 {
     int colors_array_tokens = ctx->tok[*i].size;
+    int array_end_index = ctx->tok[*i].end;
 
     if (json_match(ctx, JSMN_ARRAY, i) != 0)
         return 1;
@@ -328,27 +377,52 @@ parse_palette_colors_subarray(json_context_t* ctx, int* i, pal_palette_t* pal)
         (*i)++;
     }
 
+
+    if (ctx->tok[*i].start < array_end_index) {
+        // iterator still in subarray -- something other than an
+        // object was found.
+        json_error(ctx, "invalid token type found in colors array", *i);
+        return 1;
+    }
+
     (*i)--;
 
     return 0;
 }
 
 static int
-parse_palette_hints_subarray(json_context_t* ctx, int* i, pal_palette_t* pal)
+parse_palette_hints_subarray(json_context_t* ctx, int* i, pal_palette_t* pal, int palette_color_index)
 {
+    FTG_ASSERT(palette_color_index < pal->num_colors);
+
+    // expect an array of strings
+    int hints_array_end = ctx->tok[*i].end;
     if (json_match(ctx, JSMN_ARRAY, i) != 0)
         return 1;
 
-    // expect an array of strings
-    int hints_subarray_tokens = ctx->tok[*i].size;
-    int last = *i + hints_subarray_tokens;
-
-    for (; *i != last; (*i)++) {
+    for (; ctx->tok[*i].start < hints_array_end; (*i)++) {
         if (json_expect(ctx, JSMN_STRING, *i) != 0)
             return 1;
 
-        // todo: something with string
+        if (pal->num_hints[palette_color_index] >= PAL_MAX_HINTS) {
+            json_error(ctx, "PAL_MAX_HINTS exceeded for color", *i);
+            return 1;
+        }
+
+        // parse hint as string and turn it into a enum
+        pal_hint_kind_t hint;
+        int             len = ctx->tok[*i].end - ctx->tok[*i].start;
+        int result = pal_hint_for_string(ctx->str + ctx->tok[*i].start, len, &hint);
+        if (result != 0) {
+            json_error(ctx, "invalid hint", *i);
+            return 1;
+        }
+
+        // assign hint
+        pal->hints[palette_color_index][pal->num_hints[palette_color_index]++] = hint;
     }
+
+    (*i)--;
 
     return 0;
 }
@@ -356,6 +430,7 @@ parse_palette_hints_subarray(json_context_t* ctx, int* i, pal_palette_t* pal)
 static int
 parse_palette_hints_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
 {
+    int hints_object_end = ctx->tok[*i].end;
     int hints_subdoc_tokens = ctx->tok[*i].size * 2;
 
     if (json_match(ctx, JSMN_OBJECT, i) != 0)
@@ -370,12 +445,27 @@ parse_palette_hints_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
     for (int j = 0; j < PAL_MAX_COLORS; j++) pal->num_hints[j] = 0;
 
     // expect string: array pairs
-    while (ctx->tok[*i].type == JSMN_STRING) {
-        jsonskip(ctx, i, 0);
-        if (parse_palette_hints_subarray(ctx, i, pal) != 0)
+    while (ctx->tok[*i].start < hints_object_end) {
+        int palette_color_index;
+
+        int result =
+            json_token_to_palette_color_index(ctx, *i, pal, &palette_color_index);
+        if (result != 0) {
+            json_error(ctx, "hints names a color names not named in colors array", *i);
+            return 1;
+        }
+
+        json_match(ctx, JSMN_STRING, i);
+        if (parse_palette_hints_subarray(ctx, i, pal, palette_color_index) != 0)
             return 1;
         (*i)++;
     }
+
+
+    // if (ctx->tok[*i].start < hints_object_end) {
+    //     json_error(ctx, "invalid token type found in hints array", *i);
+    //     return 1;
+    // }
 
 
     (*i)--;
@@ -386,6 +476,7 @@ parse_palette_hints_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
 static int
 parse_palette_object(json_context_t* ctx, int* i, pal_palette_t* pal)
 {
+#if 0
     int palette_subdoc_tokens = ctx->tok[*i].size * 2;
     int last = *i + palette_subdoc_tokens;  // fixme: definitely not last. Subobject tokens make sure of that.
 
@@ -393,6 +484,13 @@ parse_palette_object(json_context_t* ctx, int* i, pal_palette_t* pal)
         return 1;
 
     for (; *i < last; (*i)++) {
+#endif
+    int object_end_char_index = ctx->tok[*i].end;
+
+    if (json_match(ctx, JSMN_OBJECT, i) != 0)
+        return 1;
+
+    for (; ctx->tok[*i].start <= object_end_char_index; (*i)++) {
         const int iter_start = *i;  // i == iter_start: no token consumption yet
 
         if (*i == iter_start && json_write_value_str_on_match_key(
@@ -403,7 +501,7 @@ parse_palette_object(json_context_t* ctx, int* i, pal_palette_t* pal)
             (*i)++;  // acceptable key/value, but has no analog field
 
         if (*i == iter_start && jsoneq(ctx, *i, "source") == 0) {
-            jsonskip(ctx, i, 0);
+            json_skip(ctx, i);
             if (json_expect(ctx, JSMN_OBJECT, *i) != 0)
                 return 1;
 
@@ -411,8 +509,9 @@ parse_palette_object(json_context_t* ctx, int* i, pal_palette_t* pal)
                 return 1;
         }
 
+
         if (*i == iter_start && jsoneq(ctx, *i, "colors") == 0) {
-            jsonskip(ctx, i, 0);
+            json_skip(ctx, i);
             if (json_expect(ctx, JSMN_ARRAY, *i) != 0)
                 return 1;
 
@@ -421,8 +520,8 @@ parse_palette_object(json_context_t* ctx, int* i, pal_palette_t* pal)
         }
 
         if (*i == iter_start && jsoneq(ctx, *i, "hints") == 0) {
-            jsonskip(ctx, i, 0);
-            if (json_expect(ctx, JSMN_ARRAY, *i) != 0)
+            json_skip(ctx, i);
+            if (json_expect(ctx, JSMN_OBJECT, *i) != 0)
                 return 1;
 
             if (parse_palette_hints_subobject(ctx, i, pal) != 0) {
@@ -497,7 +596,7 @@ end_search:
 
     // FTG_ASSERT(tok[i].type == JSMN_OBJECT);
     for (int current_palette = 0; current_palette != first_palette; current_palette++) {
-        jsonskip(&ctx, &i, 0);
+        json_skip(&ctx, &i);
     }
 
     if (i == ctx.num_tokens) {

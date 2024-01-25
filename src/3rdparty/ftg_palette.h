@@ -137,6 +137,7 @@ typedef enum {
     HINT_SUBTLE,
     HINT_SHADOW,
     HINT_SPECULAR,
+    HINT_MAX,  // always last
 } pal_hint_kind_t;
 
 typedef float (*pal_color_compare_func_t)(pal_color_t col0, pal_color_t col1, void* datum);
@@ -200,6 +201,10 @@ pal_u32_t pal_hash_color_values(const pal_palette_t* pal);
 
 // string names for hint enums
 const char* pal_string_for_hint(pal_hint_kind_t hint);
+
+// given a string, set *out_hint to the enum.  if len is nonzero, str
+// is not assumed to be null terminated
+int pal_hint_for_string(const char* str, int len, pal_hint_kind_t* out_hint);
 
 // emit a palette json file with num_pals palettes into out_buf
 //
@@ -339,6 +344,38 @@ pal__float_to_str(float val, char* buf, int len)
     *p_buf = 0;
 
     return 0;
+}
+
+static int
+pal__strlen(const char* s)
+{
+    int n = 0;
+    while (*s++) n++;
+
+    return n;
+}
+
+static int
+pal__strmatch(const char* s1, int s1_len, const char* s2, int s2_len)
+{
+    PAL__ASSERT(s1 && s2);
+    if (s1_len != s2_len)
+        return 0;
+
+    if (s1_len == 0)
+        return 1;
+
+    const char* ps1 = s1 + s1_len - 1;
+    const char* ps2 = s2 + s2_len - 1;
+
+    while (s1 != ps1 && s2 != ps2) {
+        if (*ps1 != *ps2)
+            return 0;
+
+        ps1--, ps2--;
+    }
+
+    return *s1 == *s2;
 }
 
 #define PAL__APPEND(s)                                                         \
@@ -1014,54 +1051,43 @@ pal_convert_channel_to_f32(pal_u8_t val)
     return val / 256.0f;
 }
 
+const char* pal__enum_strings[HINT_MAX] = {
+    "error",        "warning",
+    "normal",       "success",
+    "highlight",    "urgent",
+    "low priority", "bold",
+    "background",   "background highlight",
+    "focal point",  "title",
+    "subtitle",     "subsubtitle",
+    "todo",         "fixme",
+    "sidebar",      "subtle",
+    "shadow",       "specular"};
+
 PALDEF const char*
 pal_string_for_hint(pal_hint_kind_t hint)
 {
-    switch (hint) {
-    case HINT_ERROR:
-        return "error";
-    case HINT_WARNING:
-        return "warning";
-    case HINT_NORMAL:
-        return "normal";
-    case HINT_SUCCESS:
-        return "success";
-    case HINT_HIGHLIGHT:
-        return "highlight";
-    case HINT_URGENT:
-        return "urgent";
-    case HINT_LOW_PRIORITY:
-        return "low priority";
-    case HINT_BOLD:
-        return "bold";
-    case HINT_BACKGROUND:
-        return "background";
-    case HINT_BACKGROUND_HIGHLIGHT:
-        return "background highlight";
-    case HINT_FOCAL_POINT:
-        return "focal point";
-    case HINT_TITLE:
-        return "title";
-    case HINT_SUBTITLE:
-        return "subtitle";
-    case HINT_SUBSUBTITLE:
-        return "subsubtitle";
-    case HINT_TODO:
-        return "todo";
-    case HINT_FIXME:
-        return "fixme";
-    case HINT_SIDEBAR:
-        return "sidebar";
-    case HINT_SUBTLE:
-        return "subtle";
-    case HINT_SHADOW:
-        return "shadow";
-    case HINT_SPECULAR:
-        return "specular";
-    default:
-        PAL__ASSERT(!"Invalid hint kind");
+    if ((int)hint < 0 || (int)hint > HINT_MAX)
         return NULL;
+    return pal__enum_strings[(int)hint];
+}
+
+PALDEF int
+pal_hint_for_string(const char* str, int len, pal_hint_kind_t* out_hint)
+{
+    if (len == 0)
+        len = pal__strlen(str);
+
+    for (int i = 0; i < HINT_MAX; i++) {
+        // could avoid this waste
+        int literal_len = pal__strlen(pal__enum_strings[i]);
+
+        if (pal__strmatch(pal__enum_strings[i], literal_len, str, len)) {
+            *out_hint = (pal_hint_kind_t)i;
+            return 0;
+        }
     }
+
+    return 1;
 }
 
 pal_u32_t
