@@ -1,7 +1,7 @@
 /* palettetool Copyright (C) 2024 Frogtoss Games, Inc. */
 
 
-#if !ACTUAL_BUILD
+#if 0
 #    include <stdio.h>
 #    include <string.h>
 #    include "../3rdparty/ftg_core.h"

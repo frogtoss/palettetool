@@ -184,6 +184,7 @@ get_export_gradient_from_sort_kind(pal_palette_t* pal, const char* sort_kind)
     SORT_BASED_ON_NAME_IF_MATCH(value);
     SORT_BASED_ON_NAME_IF_MATCH(lightness);
     FTG_ASSERT(result == 0);
+    FTG_UNUSED(result);
 
 end:
     return &pal->gradients[grad_idx];
