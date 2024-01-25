@@ -27,6 +27,14 @@ typedef struct {
 
 #define JSON_EOF (*i == ctx->num_tokens)
 
+// if a token, such as a key that isn't part of the spec is found,
+// this returns failure for parsing the document
+#define JSON_RETURN_IF_UNMATCHED_TOKEN                                         \
+    if (*i == iter_start) {                                                    \
+        json_error(ctx, "unexpected token", *i);                               \
+        return 1;                                                              \
+    }
+
 static int
 jsoneq(json_context_t* ctx, int i, const char* s)
 {
@@ -240,42 +248,6 @@ json_write_value_ull_on_match_key(json_context_t*     ctx,
     return 0;
 }
 
-
-#ifdef DEBUG
-#    define JSON_ATTRIBS "start: %d end: %d size %d\n"
-static void
-jsondumptok(json_context_t* ctx, int i)
-{
-    jsmntok_t* tok = &ctx->tok[i];
-    printf("token %d\n", i);
-    switch (tok->type) {
-    case JSMN_UNDEFINED:
-        printf("tok undefined\n");
-        break;
-    case JSMN_OBJECT:
-        printf("tok object " JSON_ATTRIBS, tok->start, tok->end, tok->size);
-        break;
-    case JSMN_ARRAY:
-        printf("tok array " JSON_ATTRIBS, tok->start, tok->end, tok->size);
-        break;
-
-    case JSMN_STRING:
-        printf("tok string " JSON_ATTRIBS, tok->start, tok->end, tok->size);
-        printf("contents: '%.*s'\n", tok->end - tok->start, ctx->str + tok->start);
-        break;
-
-    case JSMN_PRIMITIVE:
-        printf("tok primitive " JSON_ATTRIBS, tok->start, tok->end, tok->size);
-        break;
-
-    default:
-        FTG_ASSERT(!"fail");
-    }
-}
-#endif
-
-
-
 int
 parse_palette_source_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
 {
@@ -283,7 +255,7 @@ parse_palette_source_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
 
     json_match(ctx, JSMN_OBJECT, i);  // skip into object's first token
 
-    for (; ctx->tok[*i].start < obj_end_index && !JSON_EOF; (*i)++) {
+    for (; !JSON_EOF && ctx->tok[*i].start < obj_end_index; (*i)++) {
         const int iter_start = *i;
 
         if (*i == iter_start &&
@@ -300,14 +272,7 @@ parse_palette_source_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
                 ctx, "conversion_date", i, &pal->source.conversion_timestamp) != 0)
             return 1;
 
-        // if i hasn't advanced in this loop, it is an unmatched token.
-        if (*i == iter_start) {
-            printf("unmatched token:\n");
-            jsondumptok(ctx, *i);
-            puts("");
-            json_error(ctx, "unexpected token", *i);
-            return 1;
-        }
+        JSON_RETURN_IF_UNMATCHED_TOKEN;
     }
 
     // on success, index into last element of subobject
@@ -331,7 +296,7 @@ parse_palette_color_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
     FTG_ASSERT(pal->num_colors < PAL_MAX_COLORS);
 
     int channel_set_count = 0;
-    for (; ctx->tok[*i].start < obj_end_index && !JSON_EOF; (*i)++) {
+    for (; !JSON_EOF && ctx->tok[*i].start < obj_end_index; (*i)++) {
         const int iter_start = *i;
 
         if (*i == iter_start &&
@@ -407,7 +372,7 @@ parse_palette_colors_subarray(json_context_t* ctx, int* i, pal_palette_t* pal)
 
     pal->num_colors = 0;
 
-    while (ctx->tok[*i].type == JSMN_OBJECT && !JSON_EOF) {
+    while (!JSON_EOF && ctx->tok[*i].type == JSMN_OBJECT) {
         if (parse_palette_color_subobject(ctx, i, pal) != 0)
             return 1;
         (*i)++;
@@ -436,7 +401,7 @@ parse_palette_hints_subarray(json_context_t* ctx, int* i, pal_palette_t* pal, in
     if (json_match(ctx, JSMN_ARRAY, i) != 0)
         return 1;
 
-    for (; ctx->tok[*i].start < hints_array_end && !JSON_EOF; (*i)++) {
+    for (; !JSON_EOF && ctx->tok[*i].start < hints_array_end; (*i)++) {
         if (json_expect(ctx, JSMN_STRING, *i) != 0)
             return 1;
 
@@ -481,7 +446,7 @@ parse_palette_hints_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
     for (int j = 0; j < PAL_MAX_COLORS; j++) pal->num_hints[j] = 0;
 
     // expect string: array pairs
-    while (ctx->tok[*i].start < hints_object_end && !JSON_EOF) {
+    while (!JSON_EOF && ctx->tok[*i].start < hints_object_end) {
         int palette_color_index;
 
         int result =
@@ -518,7 +483,7 @@ parse_palette_gradients_subarray(json_context_t* ctx, int* i, pal_palette_t* pal
 
     pal->gradients[gradient_index].num_indices = 0;
 
-    while (ctx->tok[*i].start < gradients_array_end && !JSON_EOF) {
+    while (!JSON_EOF && ctx->tok[*i].start < gradients_array_end) {
         int palette_color_index;
 
         int result =
@@ -545,12 +510,12 @@ parse_palette_gradients_subobject(json_context_t* ctx, int* i, pal_palette_t* pa
 {
     int gradients_object_end = ctx->tok[*i].end;
 
-    pal->num_gradients = 0;  // todo: also zero init at start
+    pal->num_gradients = 0;
 
     if (json_match(ctx, JSMN_OBJECT, i) != 0)
         return 1;
 
-    while (ctx->tok[*i].start < gradients_object_end && !JSON_EOF) {
+    while (!JSON_EOF && ctx->tok[*i].start < gradients_object_end) {
         if (json_expect(ctx, JSMN_STRING, *i) != 0)
             return 1;
 
@@ -586,20 +551,21 @@ parse_palette_dither_pairs_subarray(json_context_t* ctx, int* i, pal_palette_t* 
     if (json_match(ctx, JSMN_ARRAY, i) != 0)
         return 1;
 
-    pal_dither_pair_t pair;
+    int pair[2];
 
-    if (json_token_to_palette_color_index(ctx, *i, pal, (int*)&pair.index0) != 0) {
+    if (json_token_to_palette_color_index(ctx, *i, pal, &pair[0]) != 0) {
         json_error(ctx, "dither pair unknown color name", *i);
         return 1;
     }
     json_skip(ctx, i);
 
-    if (json_token_to_palette_color_index(ctx, *i, pal, (int*)&pair.index1) != 0) {
+    if (json_token_to_palette_color_index(ctx, *i, pal, &pair[1]) != 0) {
         json_error(ctx, "dither pair unknown color name", *i);
         return 1;
     }
 
-    pal->dither_pairs[dither_pair_index] = pair;
+    pal->dither_pairs[dither_pair_index].index0 = (pal_u16_t)pair[0];
+    pal->dither_pairs[dither_pair_index].index1 = (pal_u16_t)pair[1];
 
     // don't skip -- i remains on the last token on the array by convention
     // json_skip(ctx, i);
@@ -617,7 +583,7 @@ parse_palette_dither_pairs_subobject(json_context_t* ctx, int* i, pal_palette_t*
 
     pal->num_dither_pairs = 0;
 
-    while (ctx->tok[*i].start < dither_pairs_object_end && !JSON_EOF) {
+    while (!JSON_EOF && ctx->tok[*i].start < dither_pairs_object_end) {
         if (json_expect(ctx, JSMN_STRING, *i) != 0)
             return 1;
 
@@ -645,7 +611,7 @@ parse_palette_object(json_context_t* ctx, int* i, pal_palette_t* pal)
     if (json_match(ctx, JSMN_OBJECT, i) != 0)
         return 1;
 
-    for (; ctx->tok[*i].start <= object_end_char_index && !JSON_EOF; (*i)++) {
+    for (; !JSON_EOF && ctx->tok[*i].start <= object_end_char_index; (*i)++) {
         const int iter_start = *i;  // i == iter_start: no token consumption yet
 
         if (*i == iter_start && json_write_value_str_on_match_key(
@@ -703,14 +669,7 @@ parse_palette_object(json_context_t* ctx, int* i, pal_palette_t* pal)
                 return 1;
         }
 
-        // if i hasn't advanced in this loop, it is an unmatched token.
-        if (*i == iter_start) {
-            printf("unmatched token:\n");
-            jsondumptok(ctx, *i);
-            puts("");
-            json_error(ctx, "unexpected token", *i);
-            return 1;
-        }
+        JSON_RETURN_IF_UNMATCHED_TOKEN;
     }
 
     (*i)--;
@@ -779,18 +738,10 @@ end_search:
     }
 
     for (int pal_index = 0; pal_index < num_palettes; pal_index++) {
+        pal_init(&out_palettes[pal_index]);
         if (parse_palette_object(&ctx, &i, &out_palettes[pal_index]) != 0)
             return 1;
     }
-#if 0
-    int            pal_num = 0;
-    pal_palette_t* pal = &out_palettes[pal_num];  // todo: zero initialize
-    int            result = parse_palette_object(&ctx, &i, pal);
-
-    // todo: parse multiple palettes
-    if (result != 0)
-        return 1;
-#endif
 
     return 0;
 }

@@ -175,6 +175,8 @@ typedef struct {
 
 // API declaration starts here
 
+// zero-initialize a palette
+void pal_init(pal_palette_t* pal);
 
 // Convert a value in range 0-1 to an 8-bit channel between 0x0 and 0xFF
 pal_u8_t pal_convert_channel_to_8bit(float val);
@@ -1247,6 +1249,21 @@ pal_lightness_cb(pal_color_t col0, pal_color_t col1, void* datum)
     }
 
     return col1_lightness - col0_lightness;
+}
+
+void
+pal_init(pal_palette_t* pal)
+{
+    pal->version = 0;
+    pal->title[0] = 0;
+    pal->source.url[0] = 0;
+    pal->source.conversion_tool[0] = 0;
+    pal->source.conversion_timestamp = 0;
+    pal->num_colors = 0;
+    pal->num_gradients = 0;
+    pal->num_dither_pairs = 0;
+
+    for (int i = 0; i < PAL_MAX_HINTS; i++) pal->num_hints[i] = 0;
 }
 
 //
