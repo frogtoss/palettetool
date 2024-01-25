@@ -25,6 +25,8 @@ typedef struct {
     int*  error_start;
 } json_context_t;
 
+#define JSON_EOF (*i == ctx->num_tokens)
+
 static int
 jsoneq(json_context_t* ctx, int i, const char* s)
 {
@@ -45,6 +47,22 @@ json_skip(const json_context_t* ctx, int* i)
          (*i)++)
         ;  // pass
 }
+
+
+static void
+json_strcpy_token(json_context_t* ctx, char dst[PAL_MAX_STRLEN], int i)
+{
+    FTG_ASSERT(ctx->tok[i].type == JSMN_STRING);
+
+    int len_including_null = ctx->tok[i].end - ctx->tok[i].start + 1;
+
+    // silently truncate
+    if (len_including_null > PAL_MAX_STRLEN)
+        len_including_null = PAL_MAX_STRLEN;
+
+    pal__strncpy(dst, ctx->str + ctx->tok[i].start, len_including_null);
+}
+
 
 #if 0
 // keeping this around as a good example of how to recurse tokens, but
@@ -134,6 +152,8 @@ static int
 json_write_value_str_on_match_key(
     json_context_t* ctx, const char* key, int* i, char* out_value, int max_value_len)
 {
+    FTG_ASSERT(max_value_len <= PAL_MAX_STRLEN);
+
     if (jsoneq(ctx, *i, key) == 0) {
         json_skip(ctx, i);
 
@@ -143,8 +163,7 @@ json_write_value_str_on_match_key(
             return 1;
         }
 
-        int len = FTG_MIN(ctx->tok[*i].end - ctx->tok[*i].start + 1, max_value_len);
-        pal__strncpy(out_value, ctx->str + ctx->tok[*i].start, len);
+        json_strcpy_token(ctx, out_value, *i);
     }
 
     return 0;
@@ -371,7 +390,7 @@ parse_palette_colors_subarray(json_context_t* ctx, int* i, pal_palette_t* pal)
 
     pal->num_colors = 0;
 
-    while (ctx->tok[*i].type == JSMN_OBJECT) {
+    while (ctx->tok[*i].type == JSMN_OBJECT && !JSON_EOF) {
         if (parse_palette_color_subobject(ctx, i, pal) != 0)
             return 1;
         (*i)++;
@@ -445,7 +464,7 @@ parse_palette_hints_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
     for (int j = 0; j < PAL_MAX_COLORS; j++) pal->num_hints[j] = 0;
 
     // expect string: array pairs
-    while (ctx->tok[*i].start < hints_object_end) {
+    while (ctx->tok[*i].start < hints_object_end && !JSON_EOF) {
         int palette_color_index;
 
         int result =
@@ -482,7 +501,7 @@ parse_palette_gradients_subarray(json_context_t* ctx, int* i, pal_palette_t* pal
 
     pal->gradients[gradient_index].num_indices = 0;
 
-    while (ctx->tok[*i].start < gradients_array_end) {
+    while (ctx->tok[*i].start < gradients_array_end && !JSON_EOF) {
         int palette_color_index;
 
         int result =
@@ -509,12 +528,12 @@ parse_palette_gradients_subobject(json_context_t* ctx, int* i, pal_palette_t* pa
 {
     int gradients_object_end = ctx->tok[*i].end;
 
-    pal->num_gradients = 0;
+    pal->num_gradients = 0;  // todo: also zero init at start
 
     if (json_match(ctx, JSMN_OBJECT, i) != 0)
         return 1;
 
-    while (ctx->tok[*i].start < gradients_object_end) {
+    while (ctx->tok[*i].start < gradients_object_end && !JSON_EOF) {
         if (json_expect(ctx, JSMN_STRING, *i) != 0)
             return 1;
 
@@ -523,9 +542,7 @@ parse_palette_gradients_subobject(json_context_t* ctx, int* i, pal_palette_t* pa
             return 1;
         }
 
-        pal__strncpy(pal->gradient_names[pal->num_gradients],
-                     ctx->str + ctx->tok[*i].start,
-                     ctx->tok[*i].end - ctx->tok[*i].start + 1);
+        json_strcpy_token(ctx, pal->gradient_names[pal->num_gradients], *i);
 
         json_match(ctx, JSMN_STRING, i);
         if (parse_palette_gradients_subarray(ctx, i, pal, pal->num_gradients) != 0)
@@ -542,23 +559,76 @@ parse_palette_gradients_subobject(json_context_t* ctx, int* i, pal_palette_t* pa
 }
 
 static int
-parse_palette_object(json_context_t* ctx, int* i, pal_palette_t* pal)
+parse_palette_dither_pairs_subarray(json_context_t* ctx, int* i, pal_palette_t* pal, int dither_pair_index)
 {
-#if 0
-    int palette_subdoc_tokens = ctx->tok[*i].size * 2;
-    int last = *i + palette_subdoc_tokens;  // fixme: definitely not last. Subobject tokens make sure of that.
+    if (ctx->tok[*i].size != 2) {
+        json_error(ctx, "dither pairs array expects exactly 2 color names", *i);
+        return 1;
+    }
+
+    if (json_match(ctx, JSMN_ARRAY, i) != 0)
+        return 1;
+
+    pal_dither_pair_t pair;
+
+    if (json_token_to_palette_color_index(ctx, *i, pal, (int*)&pair.index0) != 0) {
+        json_error(ctx, "dither pair unknown color name", *i);
+        return 1;
+    }
+    json_skip(ctx, i);
+
+    if (json_token_to_palette_color_index(ctx, *i, pal, (int*)&pair.index1) != 0) {
+        json_error(ctx, "dither pair unknown color name", *i);
+        return 1;
+    }
+
+    pal->dither_pairs[dither_pair_index] = pair;
+
+    // don't skip -- i remains on the last token on the array by convention
+    // json_skip(ctx, i);
+
+    return 0;
+}
+
+static int
+parse_palette_dither_pairs_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
+{
+    int dither_pairs_object_end = ctx->tok[*i].end;
 
     if (json_match(ctx, JSMN_OBJECT, i) != 0)
         return 1;
 
-    for (; *i < last; (*i)++) {
-#endif
+    pal->num_dither_pairs = 0;
+
+    while (ctx->tok[*i].start < dither_pairs_object_end && !JSON_EOF) {
+        if (json_expect(ctx, JSMN_STRING, *i) != 0)
+            return 1;
+
+        json_strcpy_token(ctx, pal->dither_pair_names[pal->num_dither_pairs], *i);
+
+        json_match(ctx, JSMN_STRING, i);
+        if (parse_palette_dither_pairs_subarray(ctx, i, pal, pal->num_dither_pairs) != 0)
+            return 1;
+
+        pal->num_dither_pairs++;
+
+        (*i)++;
+    }
+
+    (*i)--;
+
+    return 0;
+}
+
+static int
+parse_palette_object(json_context_t* ctx, int* i, pal_palette_t* pal)
+{
     int object_end_char_index = ctx->tok[*i].end;
 
     if (json_match(ctx, JSMN_OBJECT, i) != 0)
         return 1;
 
-    for (; ctx->tok[*i].start <= object_end_char_index; (*i)++) {
+    for (; ctx->tok[*i].start <= object_end_char_index && !JSON_EOF; (*i)++) {
         const int iter_start = *i;  // i == iter_start: no token consumption yet
 
         if (*i == iter_start && json_write_value_str_on_match_key(
@@ -603,6 +673,16 @@ parse_palette_object(json_context_t* ctx, int* i, pal_palette_t* pal)
                 return 1;
 
             if (parse_palette_gradients_subobject(ctx, i, pal) != 0)
+                return 1;
+        }
+
+        if (*i == iter_start && jsoneq(ctx, *i, "dither_pairs") == 0) {
+            json_skip(ctx, i);
+
+            if (json_expect(ctx, JSMN_OBJECT, *i) != 0)
+                return 1;
+
+            if (parse_palette_dither_pairs_subobject(ctx, i, pal) != 0)
                 return 1;
         }
 
