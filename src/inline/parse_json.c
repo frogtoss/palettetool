@@ -451,7 +451,7 @@ parse_palette_hints_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
         int result =
             json_token_to_palette_color_index(ctx, *i, pal, &palette_color_index);
         if (result != 0) {
-            json_error(ctx, "hints names a color names not named in colors array", *i);
+            json_error(ctx, "hints names a color name not in colors array", *i);
             return 1;
         }
 
@@ -467,6 +467,74 @@ parse_palette_hints_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
     //     return 1;
     // }
 
+
+    (*i)--;
+
+    return 0;
+}
+
+static int
+parse_palette_gradients_subarray(json_context_t* ctx, int* i, pal_palette_t* pal, int gradient_index)
+{
+    int gradients_array_end = ctx->tok[*i].end;
+    if (json_match(ctx, JSMN_ARRAY, i) != 0)
+        return 1;
+
+    pal->gradients[gradient_index].num_indices = 0;
+
+    while (ctx->tok[*i].start < gradients_array_end) {
+        int palette_color_index;
+
+        int result =
+            json_token_to_palette_color_index(ctx, *i, pal, &palette_color_index);
+        if (result != 0) {
+            json_error(ctx, "gradient names a color name not in colors array", *i);
+            return 1;
+        }
+
+        pal->gradients[gradient_index].indices[pal->gradients[gradient_index].num_indices++] =
+            palette_color_index;
+
+        (*i)++;
+    }
+
+    (*i)--;
+
+    return 0;
+}
+
+
+static int
+parse_palette_gradients_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
+{
+    int gradients_object_end = ctx->tok[*i].end;
+
+    pal->num_gradients = 0;
+
+    if (json_match(ctx, JSMN_OBJECT, i) != 0)
+        return 1;
+
+    while (ctx->tok[*i].start < gradients_object_end) {
+        if (json_expect(ctx, JSMN_STRING, *i) != 0)
+            return 1;
+
+        if (pal->num_gradients >= PAL_MAX_GRADIENTS) {
+            json_error(ctx, "PAL_MAX_GRADIENTS exceeded", *i);
+            return 1;
+        }
+
+        pal__strncpy(pal->gradient_names[pal->num_gradients],
+                     ctx->str + ctx->tok[*i].start,
+                     ctx->tok[*i].end - ctx->tok[*i].start + 1);
+
+        json_match(ctx, JSMN_STRING, i);
+        if (parse_palette_gradients_subarray(ctx, i, pal, pal->num_gradients) != 0)
+            return 1;
+
+        pal->num_gradients++;
+
+        (*i)++;
+    }
 
     (*i)--;
 
@@ -524,9 +592,18 @@ parse_palette_object(json_context_t* ctx, int* i, pal_palette_t* pal)
             if (json_expect(ctx, JSMN_OBJECT, *i) != 0)
                 return 1;
 
-            if (parse_palette_hints_subobject(ctx, i, pal) != 0) {
+            if (parse_palette_hints_subobject(ctx, i, pal) != 0)
                 return 1;
-            }
+        }
+
+        if (*i == iter_start && jsoneq(ctx, *i, "gradients") == 0) {
+            json_skip(ctx, i);
+
+            if (json_expect(ctx, JSMN_OBJECT, *i) != 0)
+                return 1;
+
+            if (parse_palette_gradients_subobject(ctx, i, pal) != 0)
+                return 1;
         }
 
         // if i hasn't advanced in this loop, it is an unmatched token.
