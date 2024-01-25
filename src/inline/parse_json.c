@@ -73,9 +73,6 @@ json_strcpy_token(json_context_t* ctx, char dst[PAL_MAX_STRLEN], int i)
 static void
 jsonskip(const json_context_t* ctx, int* i, int depth)
 {
-    json_skip2(ctx, i);
-    return;
-
     if (*i >= ctx->num_tokens)
         return;
 
@@ -106,7 +103,7 @@ json_error(json_context_t* ctx, const char* error, int i)
 {
     pal__strncpy(ctx->parse_error, error, PAL_MAX_STRLEN);
     *ctx->error_start = ctx->tok[i].start;
-    FTG_ASSERT(!"break on error");
+    // FTG_ASSERT(!"break on error");
 }
 
 // check if token is of type, setting error if it doesn't
@@ -220,6 +217,30 @@ json_write_value_float_on_match_key(json_context_t* ctx,
     return 0;
 }
 
+
+static int
+json_write_value_ull_on_match_key(json_context_t*     ctx,
+                                  const char*         key,
+                                  int*                i,
+                                  unsigned long long* out_num)
+{
+    if (jsoneq(ctx, *i, key) == 0) {
+        json_skip(ctx, i);
+
+        // the one ull we have in this document is intentionally stored inside a string
+        if (json_expect(ctx, JSMN_STRING, *i) != 0) {
+            json_error(ctx, "expected primitive token type", *i);
+            return 1;
+        }
+
+
+        *out_num = strtoull(ctx->str + ctx->tok[*i].start, NULL, 10);
+    }
+
+    return 0;
+}
+
+
 #ifdef DEBUG
 #    define JSON_ATTRIBS "start: %d end: %d size %d\n"
 static void
@@ -262,7 +283,7 @@ parse_palette_source_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
 
     json_match(ctx, JSMN_OBJECT, i);  // skip into object's first token
 
-    for (; ctx->tok[*i].start < obj_end_index; (*i)++) {
+    for (; ctx->tok[*i].start < obj_end_index && !JSON_EOF; (*i)++) {
         const int iter_start = *i;
 
         if (*i == iter_start &&
@@ -274,13 +295,10 @@ parse_palette_source_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
                                     ctx, "url", i, pal->source.url, PAL_MAX_STRLEN) != 0)
             return 1;
 
-        // todo: parse this into a u32
-        char fixme_buf[PAL_MAX_STRLEN];
         if (*i == iter_start &&
-            json_write_value_str_on_match_key(
-                ctx, "conversion_date", i, fixme_buf, PAL_MAX_STRLEN) != 0)
+            json_write_value_ull_on_match_key(
+                ctx, "conversion_date", i, &pal->source.conversion_timestamp) != 0)
             return 1;
-
 
         // if i hasn't advanced in this loop, it is an unmatched token.
         if (*i == iter_start) {
@@ -313,8 +331,7 @@ parse_palette_color_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
     FTG_ASSERT(pal->num_colors < PAL_MAX_COLORS);
 
     int channel_set_count = 0;
-    // for (; *i < last; (*i)++) {
-    for (; ctx->tok[*i].start < obj_end_index; (*i)++) {
+    for (; ctx->tok[*i].start < obj_end_index && !JSON_EOF; (*i)++) {
         const int iter_start = *i;
 
         if (*i == iter_start &&
@@ -419,7 +436,7 @@ parse_palette_hints_subarray(json_context_t* ctx, int* i, pal_palette_t* pal, in
     if (json_match(ctx, JSMN_ARRAY, i) != 0)
         return 1;
 
-    for (; ctx->tok[*i].start < hints_array_end; (*i)++) {
+    for (; ctx->tok[*i].start < hints_array_end && !JSON_EOF; (*i)++) {
         if (json_expect(ctx, JSMN_STRING, *i) != 0)
             return 1;
 
@@ -761,7 +778,11 @@ end_search:
         return 1;
     }
 
-    // parse single palette
+    for (int pal_index = 0; pal_index < num_palettes; pal_index++) {
+        if (parse_palette_object(&ctx, &i, &out_palettes[pal_index]) != 0)
+            return 1;
+    }
+#if 0
     int            pal_num = 0;
     pal_palette_t* pal = &out_palettes[pal_num];  // todo: zero initialize
     int            result = parse_palette_object(&ctx, &i, pal);
@@ -769,6 +790,7 @@ end_search:
     // todo: parse multiple palettes
     if (result != 0)
         return 1;
+#endif
 
     return 0;
 }
