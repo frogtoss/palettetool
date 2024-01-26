@@ -27,6 +27,7 @@
     <ClInclude Include="..\..\src\config\palconfig.h">
       <Filter>config</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\parse_json.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\palettetool.c" />

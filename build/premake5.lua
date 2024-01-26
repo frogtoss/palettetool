@@ -95,10 +95,11 @@ workspace "Palette Tool"
 -- cwd for debug execution is relative to installed DLL
 -- directory.
 
-    filter "toolset:msc"
-      debugdir(root_dir.."../bin/$(Configuration)/win32_$(PlatformTarget)")
-      targetdir(root_dir.."../bin/$(Configuration)/win32_$(PlatformTarget)")
-
+--    filter "toolset:msc"
+--      debugdir(root_dir.."../bin/$(Configuration)/win32_$(PlatformTarget)")
+--      targetdir(root_dir.."../bin/$(Configuration)/win32_$(PlatformTarget)")
+      targetdir(root_dir.."/bin")
+      debugdir(root_dir.."/bin")
 
 
 newaction

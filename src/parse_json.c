@@ -8,14 +8,13 @@
   It is a fast, malloc-less parse of a json document which should
   compile warnings-free on Visual C++, GCC and Clang.  To add it:
 
-   1. copy the file into your project's source tree
+   1. copy parse_json.c and parse_json.h to your project
 
    2. add jsmn.h to your project's source tree
 
-   3. fix up the include paths below
+   3. fix up the 3rdparty include paths below
 
-   4. add  the prototype for parse_json_into_palettes.h to
-      the calling function.
+   4. call parse_json_into_palettes(), returning 0 on success
 
   This parser depends on jsmn for tokenization.  The resulting parse
   has the following properties:
@@ -247,7 +246,7 @@ json_write_value_str_on_match_key(
 
 // token pointed to by *i is a string that is the name of a color in
 // pal->color_names. return the index to it.
-int
+static int
 json_token_to_palette_color_index(json_context_t*      ctx,
                                   int                  i,
                                   const pal_palette_t* pal,
@@ -318,7 +317,7 @@ json_write_value_ull_on_match_key(json_context_t*     ctx,
     return 0;
 }
 
-int
+static int
 parse_palette_source_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
 {
     int obj_end_index = ctx->tok[*i].end;
