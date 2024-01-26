@@ -114,10 +114,138 @@
                     "blue": 0.00000000,
                     "alpha": 1.0
                 }
-            ]
+            ],
 
+            "hints": {
 
+            },
 
+            "gradients": {
+                "sort by red channel": [
+                    "pure red",
+                    "road edge highlight",
+                    "obstruction top",
+                    "road",
+                    "ground background",
+                    "toffee2",
+                    "toffee1",
+                    "pink sky",
+                    "layer",
+                    "obstruction side",
+                    "background candy",
+                    "road edge shadow",
+                    "yummy candy",
+                    "marizpan",
+                    "darkgray"
+                ],
+                "sort by green channel": [
+                    "toffee2",
+                    "road edge highlight",
+                    "road",
+                    "yummy candy",
+                    "ground background",
+                    "obstruction top",
+                    "toffee1",
+                    "pink sky",
+                    "background candy",
+                    "road edge shadow",
+                    "obstruction side",
+                    "layer",
+                    "marizpan",
+                    "darkgray",
+                    "pure red"
+                ],
+                "sort by blue channel": [
+                    "road edge highlight",
+                    "obstruction top",
+                    "pink sky",
+                    "road",
+                    "road edge shadow",
+                    "yummy candy",
+                    "obstruction side",
+                    "background candy",
+                    "ground background",
+                    "layer",
+                    "toffee2",
+                    "toffee1",
+                    "marizpan",
+                    "darkgray",
+                    "pure red"
+                ],
+                "sort by hue": [
+                    "darkgray",
+                    "yummy candy",
+                    "toffee2",
+                    "road edge highlight",
+                    "ground background",
+                    "background candy",
+                    "toffee1",
+                    "road",
+                    "road edge shadow",
+                    "obstruction side",
+                    "marizpan",
+                    "obstruction top",
+                    "layer",
+                    "pink sky",
+                    "pure red"
+                ],
+                "sort by saturation": [
+                    "pure red",
+                    "toffee2",
+                    "toffee1",
+                    "ground background",
+                    "marizpan",
+                    "layer",
+                    "background candy",
+                    "obstruction side",
+                    "yummy candy",
+                    "road",
+                    "road edge shadow",
+                    "pink sky",
+                    "obstruction top",
+                    "road edge highlight",
+                    "darkgray"
+                ],
+                "sort by value": [
+                    "toffee2",
+                    "pure red",
+                    "road edge highlight",
+                    "obstruction top",
+                    "road",
+                    "ground background",
+                    "toffee1",
+                    "pink sky",
+                    "layer",
+                    "yummy candy",
+                    "obstruction side",
+                    "background candy",
+                    "road edge shadow",
+                    "marizpan",
+                    "darkgray"
+                ],
+                "sort by lightness": [
+                    "road edge highlight",
+                    "obstruction top",
+                    "pink sky",
+                    "road",
+                    "yummy candy",
+                    "obstruction side",
+                    "ground background",
+                    "road edge shadow",
+                    "toffee2",
+                    "background candy",
+                    "toffee1",
+                    "layer",
+                    "pure red",
+                    "marizpan",
+                    "darkgray"
+                ]
+            },
+
+            "dither_pairs": {
+                "road to sky": ["road", "pink sky"]
+            }
+            
         }
     ]
 }

@@ -249,6 +249,8 @@ main(int argc, char* argv[])
     case FILE_KIND_JSON_PALETTE: {
         ftg_off_t json_strlen;
         u8*       json_string = ftg_file_read(args.in_file, true, &json_strlen);
+        if (json_string == NULL)
+            fatal(ftg_va("could not read '%s'", args.in_file));
 
         char error_message[PAL_MAX_STRLEN] = {0};
         int  error_location;

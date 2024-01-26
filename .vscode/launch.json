@@ -9,11 +9,11 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/palettetool_d",
-            "args": ["--in", "../test/data/sweet_sweet_canyon.json", "--out", "/tmp/out.png"],
+            "args": ["--verbose", "--in", "../test/data/sweet_sweet_canyon_bad.json", "--out", "/tmp/out.png"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],
-            "externalConsole": false,
+            "externalConsole": true,
             "MIMode": "lldb"
         },
     ],
