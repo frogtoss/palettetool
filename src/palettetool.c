@@ -149,6 +149,7 @@ print_supported_kinds(void)
 
 #define SORT_BASED_ON_NAME_IF_MATCH(n)                                              \
     if (ftg_stricmp(sort_kind, #n) == 0) {                                          \
+        match_found = true;                                                         \
         result |= pal_create_sorted_gradient(pal, "export_me", pal_##n##_cb, NULL); \
     }
 
@@ -168,7 +169,8 @@ get_export_gradient_from_sort_kind(pal_palette_t* pal, const char* sort_kind)
     }
 
     // this adds a gradient called "export me" in-place
-    int result = 0;
+    int  result = 0;
+    bool match_found = false;
     SORT_BASED_ON_NAME_IF_MATCH(red);
     SORT_BASED_ON_NAME_IF_MATCH(green);
     SORT_BASED_ON_NAME_IF_MATCH(blue);
@@ -178,6 +180,11 @@ get_export_gradient_from_sort_kind(pal_palette_t* pal, const char* sort_kind)
     SORT_BASED_ON_NAME_IF_MATCH(lightness);
     FTG_ASSERT(result == 0);
     FTG_UNUSED(result);
+
+    if (match_found != true) {
+        fatal(ftg_va(
+            "invalid sort kind '%s'.  Use --help to see all sort kinds", sort_kind));
+    }
 
 end:
     return &pal->gradients[grad_idx];
