@@ -41,6 +41,10 @@
 //
 // <basic usage here>
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4201)
+#endif
+
 #ifdef PAL_PALETTE_STATIC
 #    define PALDEF static
 #else
@@ -152,7 +156,7 @@ typedef struct {
     pal_u16_t index1;
 } pal_dither_pair_t;
 
-typedef struct {
+typedef struct pal_palette_s {
     unsigned short version;
     pal_str_t      title;
     pal_source_t   source;
@@ -337,7 +341,7 @@ pal__float_to_str(float val, char* buf, int len)
         val *= 10.f;
         int digit = (char)val;
         PAL__ASSERT(digit >= 0 || digit <= 9);
-        char num = '0' + digit;
+        char num = '0' + (char)digit;
         *p_buf++ = num;
         val -= (float)digit;
     }
@@ -872,7 +876,7 @@ pal__utf16be_to_utf8(const unsigned char** p_bytes,
             if (p_end <= p_dst + 1)
                 break;
 
-            *p_dst++ = codepoint;
+            *p_dst++ = (char)codepoint;
         } else if (codepoint < 0x800) {
             // two byte
             if (p_end <= p_dst + 2)
@@ -974,9 +978,9 @@ pal_parse_aco(const unsigned char* bytes,
 
         switch (aco_color.color_space) {
         case CS_RGB:
-            out_pal->colors[i].rgba.r = (float)aco_color.w / 65535.0;
-            out_pal->colors[i].rgba.g = (float)aco_color.x / 65535.0;
-            out_pal->colors[i].rgba.b = (float)aco_color.y / 65535.0;
+            out_pal->colors[i].rgba.r = (float)aco_color.w / 65535.0f;
+            out_pal->colors[i].rgba.g = (float)aco_color.x / 65535.0f;
+            out_pal->colors[i].rgba.b = (float)aco_color.y / 65535.0f;
             out_pal->colors[i].rgba.a = 1.0f;
             PAL__ASSERT(aco_color.z == 0);
             break;
@@ -1133,7 +1137,7 @@ pal_create_sorted_gradient(pal_palette_t*           pal,
     int            len = pal->num_colors;
     gradient.num_indices = len;
     for (i = 0; i < len; i++) {
-        gradient.indices[i] = i;
+        gradient.indices[i] = (pal_u16_t)i;
     }
 
     // lame bubble sort
@@ -1234,6 +1238,7 @@ pal_value_cb(pal_color_t col0, pal_color_t col1, void* datum)
 float
 pal_lightness_cb(pal_color_t col0, pal_color_t col1, void* datum)
 {
+    PAL__UNUSED(datum);
     float col0_lightness, col1_lightness;
 
     {

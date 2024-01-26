@@ -576,7 +576,7 @@ static bool _kgflags_is_flag(const char *arg) {
 }
 
 static const char* _kgflags_get_flag_name(const char* arg) {
-    unsigned long prefix_len = strlen(_kgflags_g.flag_prefix);
+    unsigned long prefix_len = (unsigned long)strlen(_kgflags_g.flag_prefix);
     if (strlen(arg) < prefix_len) {
         return NULL;
     }

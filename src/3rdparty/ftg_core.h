@@ -2063,7 +2063,7 @@ ftg_ftell64(FILE *stream)
         FTG_ASSERT_FAIL(fail_reason);
     }
 #endif    
-    return tell;
+    return (ftg_off_t)tell;
 
 #else
 

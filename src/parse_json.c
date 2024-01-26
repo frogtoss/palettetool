@@ -1,17 +1,53 @@
 /* palettetool Copyright (C) 2024 Frogtoss Games, Inc. */
 
+/*
+  This palette JSON parsing code is purposely written in a separate c
+  file so it can be ripped out, and palette parsing can be added to
+  another program without too much trouble.
 
-#if 0
-#    include <stdio.h>
-#    include <string.h>
-#    include "../3rdparty/ftg_core.h"
-#    include "../3rdparty/ftg_palette.h"
-#endif
+  It is a fast, malloc-less parse of a json document which should
+  compile warnings-free on Visual C++, GCC and Clang.  To add it:
 
-#include "../3rdparty/jsmn.h"
+   1. copy the file into your project's source tree
 
-#include <stdlib.h>  // for strtod, hope to replace
+   2. add jsmn.h to your project's source tree
 
+   3. fix up the include paths below
+
+   4. add  the prototype for parse_json_into_palettes.h to
+      the calling function.
+
+  This parser depends on jsmn for tokenization.  The resulting parse
+  has the following properties:
+
+   - silent truncation of strings to fit in PAL_MAX_STRLEN
+
+   - no utf-8 escaping of json strings
+
+   - strict on not allowing additional keys (it will error out)
+
+   - fails on first error with semi-vague error message, but also
+     the char start of the error tokne
+
+   - uses libc routines for string to number conversion, which
+     conflate 0 and error, so silent errors to 0 can occur
+
+   - it's fast
+
+ */
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>  // for strtod
+#include <assert.h>
+
+#include "3rdparty/ftg_palette.h"
+#include "3rdparty/jsmn.h"
+
+#define JSON_ASSERT(expr) assert(expr)
+#define JSON_UNUSED(x) ((void)x)
+
+// increase this for multiple palettes in a json doc
 #define MAX_JSMN_TOKENS 1024
 
 typedef struct {
@@ -34,6 +70,39 @@ typedef struct {
         json_error(ctx, "unexpected token", *i);                               \
         return 1;                                                              \
     }
+
+// max_copy includes null byte
+static int
+json_strncpy(char* dst, const char* src, int max_copy)
+{
+    size_t n;
+    char*  d;
+
+    JSON_ASSERT(dst);
+    JSON_ASSERT(src);
+    JSON_ASSERT(max_copy > 0);
+
+    if (max_copy == 0)
+        return 1;
+
+    n = max_copy;
+    d = dst;
+    while (n > 0 && *src != '\0') {
+        *d++ = *src++;
+        --n;
+    }
+
+    /* Truncation case -
+       terminate string and return true */
+    if (n == 0) {
+        dst[max_copy - 1] = '\0';
+        return 1;
+    }
+
+    /* No truncation.  Append a single NULL and return. */
+    *d = '\0';
+    return 0;
+}
 
 static int
 jsoneq(json_context_t* ctx, int i, const char* s)
@@ -60,7 +129,7 @@ json_skip(const json_context_t* ctx, int* i)
 static void
 json_strcpy_token(json_context_t* ctx, char dst[PAL_MAX_STRLEN], int i)
 {
-    FTG_ASSERT(ctx->tok[i].type == JSMN_STRING);
+    JSON_ASSERT(ctx->tok[i].type == JSMN_STRING);
 
     int len_including_null = ctx->tok[i].end - ctx->tok[i].start + 1;
 
@@ -68,7 +137,7 @@ json_strcpy_token(json_context_t* ctx, char dst[PAL_MAX_STRLEN], int i)
     if (len_including_null > PAL_MAX_STRLEN)
         len_including_null = PAL_MAX_STRLEN;
 
-    pal__strncpy(dst, ctx->str + ctx->tok[i].start, len_including_null);
+    json_strncpy(dst, ctx->str + ctx->tok[i].start, len_including_null);
 }
 
 
@@ -109,16 +178,16 @@ jsonskip(const json_context_t* ctx, int* i, int depth)
 static void
 json_error(json_context_t* ctx, const char* error, int i)
 {
-    pal__strncpy(ctx->parse_error, error, PAL_MAX_STRLEN);
+    json_strncpy(ctx->parse_error, error, PAL_MAX_STRLEN);
     *ctx->error_start = ctx->tok[i].start;
-    // FTG_ASSERT(!"break on error");
+    // JSON_ASSERT(!"break on error");
 }
 
 // check if token is of type, setting error if it doesn't
 static int
 json_expect(json_context_t* ctx, jsmntype_t jsmn_type_flags, int i)
 {
-    FTG_ASSERT(i < ctx->num_tokens);
+    JSON_ASSERT(i < ctx->num_tokens);
 
     if ((ctx->tok[i].type & jsmn_type_flags) != 0) {
         return 0;
@@ -133,7 +202,7 @@ json_expect(json_context_t* ctx, jsmntype_t jsmn_type_flags, int i)
 static int
 json_match(json_context_t* ctx, jsmntype_t jsmn_type_flags, int* i)
 {
-    FTG_ASSERT(*i < ctx->num_tokens);
+    JSON_ASSERT(*i < ctx->num_tokens);
 
     if ((ctx->tok[*i].type & jsmn_type_flags) != 0) {
         (*i)++;
@@ -157,7 +226,8 @@ static int
 json_write_value_str_on_match_key(
     json_context_t* ctx, const char* key, int* i, char* out_value, int max_value_len)
 {
-    FTG_ASSERT(max_value_len <= PAL_MAX_STRLEN);
+    JSON_ASSERT(max_value_len <= PAL_MAX_STRLEN);
+    JSON_UNUSED(max_value_len);
 
     if (jsoneq(ctx, *i, key) == 0) {
         json_skip(ctx, i);
@@ -293,7 +363,7 @@ parse_palette_color_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
 
     pal_color_t* col = &pal->colors[pal->num_colors];
 
-    FTG_ASSERT(pal->num_colors < PAL_MAX_COLORS);
+    JSON_ASSERT(pal->num_colors < PAL_MAX_COLORS);
 
     int channel_set_count = 0;
     for (; !JSON_EOF && ctx->tok[*i].start < obj_end_index; (*i)++) {
@@ -394,7 +464,7 @@ parse_palette_colors_subarray(json_context_t* ctx, int* i, pal_palette_t* pal)
 static int
 parse_palette_hints_subarray(json_context_t* ctx, int* i, pal_palette_t* pal, int palette_color_index)
 {
-    FTG_ASSERT(palette_color_index < pal->num_colors);
+    JSON_ASSERT(palette_color_index < pal->num_colors);
 
     // expect an array of strings
     int hints_array_end = ctx->tok[*i].end;
@@ -462,13 +532,6 @@ parse_palette_hints_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
         (*i)++;
     }
 
-
-    // if (ctx->tok[*i].start < hints_object_end) {
-    //     json_error(ctx, "invalid token type found in hints array", *i);
-    //     return 1;
-    // }
-
-
     (*i)--;
 
     return 0;
@@ -494,7 +557,7 @@ parse_palette_gradients_subarray(json_context_t* ctx, int* i, pal_palette_t* pal
         }
 
         pal->gradients[gradient_index].indices[pal->gradients[gradient_index].num_indices++] =
-            palette_color_index;
+            (pal_u16_t)palette_color_index;
 
         (*i)++;
     }
@@ -679,7 +742,7 @@ parse_palette_object(json_context_t* ctx, int* i, pal_palette_t* pal)
 
 int
 parse_json_into_palettes(const char*    json_str,
-                         usize          json_strlen,
+                         size_t         json_strlen,
                          pal_palette_t* out_palettes,
                          int            first_palette,
                          int            num_palettes,
@@ -694,7 +757,7 @@ parse_json_into_palettes(const char*    json_str,
     ctx.num_tokens =
         jsmn_parse(&parser, json_str, json_strlen, ctx.tok, MAX_JSMN_TOKENS);
     if (ctx.num_tokens < 0) {
-        FTG_ASSERT(!"jsmn_parse failed with error");
+        JSON_ASSERT(!"jsmn_parse failed with error");
         return 1;
     }
     ctx.str = json_str;
@@ -723,7 +786,7 @@ parse_json_into_palettes(const char*    json_str,
     }
 end_search:
     if (i == ctx.num_tokens) {
-        FTG_ASSERT(!"json document didn't have any palettes");
+        JSON_ASSERT(!"json document didn't have any palettes");
         return 1;
     }
 

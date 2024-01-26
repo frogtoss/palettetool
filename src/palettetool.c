@@ -8,11 +8,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "parse_json.h"
+
 #include "3rdparty/ftg_core.h"
 #include "3rdparty/ftg_palette.h"
 #include "3rdparty/kgflags.h"
 #include "3rdparty/stb_image_write.h"
-#include "3rdparty/jsmn.h"
+
 
 struct args_s {
     const char* in_file;
@@ -38,16 +41,6 @@ typedef enum {
 const file_kind_t SUPPORTED_INPUT_FORMATS[] = {FILE_KIND_ACO, FILE_KIND_JSON_PALETTE, 0};
 const file_kind_t SUPPORTED_OUTPUT_FORMATS[] = {
     FILE_KIND_JSON_PALETTE, FILE_KIND_PNG, 0};
-
-int parse_json_into_palettes(const char*    json_str,
-                             usize          json_strlen,
-                             pal_palette_t* out_palettes,
-
-                             int first_palette,
-                             int num_palettes,
-
-                             char out_error_message[PAL_MAX_STRLEN],
-                             int* out_error_start);
 
 const char*
 kind_to_string(file_kind_t kind)
@@ -166,7 +159,7 @@ get_export_gradient_from_sort_kind(pal_palette_t* pal, const char* sort_kind)
     int grad_idx = pal->num_gradients;
     if (!sort_kind) {
         for (int i = 0; i < pal->num_colors; i++) {
-            pal->gradients[grad_idx].indices[i] = i;
+            pal->gradients[grad_idx].indices[i] = (pal_u16_t)i;
         }
         strcpy(pal->gradient_names[pal->num_gradients], "export_me");
         pal->gradients[grad_idx].num_indices = pal->num_colors;
@@ -287,7 +280,7 @@ main(int argc, char* argv[])
         usize output_buf_bytes = (1 << 15);
         char* buf = FTG_MALLOC(sizeof(u8), output_buf_bytes);
 
-        result = pal_emit_palette_json(&palette, 1, buf, output_buf_bytes);
+        result = pal_emit_palette_json(&palette, 1, buf, (int)output_buf_bytes);
         if (result != 0)
             fatal("failed to generate json palette");
 
@@ -335,5 +328,3 @@ main(int argc, char* argv[])
 
     return 0;
 }
-
-#include "inline/parse_json.c"
