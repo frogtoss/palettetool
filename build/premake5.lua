@@ -97,7 +97,8 @@ workspace "Palette Tool"
 
 --    filter "toolset:msc"
 --      debugdir(root_dir.."../bin/$(Configuration)/win32_$(PlatformTarget)")
---      targetdir(root_dir.."../bin/$(Configuration)/win32_$(PlatformTarget)")
+      --      targetdir(root_dir.."../bin/$(Configuration)/win32_$(PlatformTarget)")
+    filter{}
       targetdir(root_dir.."/bin")
       debugdir(root_dir.."/bin")
 

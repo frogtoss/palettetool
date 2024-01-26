@@ -20,7 +20,7 @@ ifeq ($(config),debug_x64)
   ifeq ($(origin AR), default)
     AR = ar
   endif
-  TARGETDIR = bin/x64/Debug
+  TARGETDIR = ../../bin
   TARGET = $(TARGETDIR)/palettetool_d
   OBJDIR = obj/x64/Debug
   DEFINES += -DDEBUG -D_DEBUG -DFINAL_RELEASE=0
@@ -55,7 +55,7 @@ ifeq ($(config),release_x64)
   ifeq ($(origin AR), default)
     AR = ar
   endif
-  TARGETDIR = bin/x64/Release
+  TARGETDIR = ../../bin
   TARGET = $(TARGETDIR)/palettetool
   OBJDIR = obj/x64/Release
   DEFINES += -DNDEBUG -DRELEASE -DFINAL_RELEASE=0

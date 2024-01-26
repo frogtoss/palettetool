@@ -12,7 +12,7 @@ endif
 
 ifeq ($(config),debug_x64)
   RESCOMP = windres
-  TARGETDIR = bin/x64/Debug
+  TARGETDIR = ../../bin
   TARGET = $(TARGETDIR)/palettetool_d
   OBJDIR = obj/x64/Debug
   DEFINES += -DDEBUG -D_DEBUG -DFINAL_RELEASE=0
@@ -39,7 +39,7 @@ endif
 
 ifeq ($(config),debug_x86)
   RESCOMP = windres
-  TARGETDIR = bin/x86/Debug
+  TARGETDIR = ../../bin
   TARGET = $(TARGETDIR)/palettetool_d
   OBJDIR = obj/x86/Debug
   DEFINES += -DDEBUG -D_DEBUG -DFINAL_RELEASE=0
@@ -66,7 +66,7 @@ endif
 
 ifeq ($(config),release_x64)
   RESCOMP = windres
-  TARGETDIR = bin/x64/Release
+  TARGETDIR = ../../bin
   TARGET = $(TARGETDIR)/palettetool
   OBJDIR = obj/x64/Release
   DEFINES += -DNDEBUG -DRELEASE -DFINAL_RELEASE=0
@@ -93,7 +93,7 @@ endif
 
 ifeq ($(config),release_x86)
   RESCOMP = windres
-  TARGETDIR = bin/x86/Release
+  TARGETDIR = ../../bin
   TARGET = $(TARGETDIR)/palettetool
   OBJDIR = obj/x86/Release
   DEFINES += -DNDEBUG -DRELEASE -DFINAL_RELEASE=0
