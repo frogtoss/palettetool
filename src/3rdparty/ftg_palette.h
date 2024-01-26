@@ -57,21 +57,6 @@
 #    define PALDEFDATA
 #endif
 
-
-#if defined(PAL_MALLOC) && defined(PAL_FREE) && defined(PAL_REALLOC)
-// okay
-#elif !defined(PAL_MALLOC) && !defined(PAL_FREE) && !defined(PAL_REALLOC)
-// also okay
-#else
-#    error "Must define all or none of PAL_MALLOC, PAL_FREE and PAL_REALLOC."
-#endif
-
-#ifndef PAL_MALLOC
-#    define PAL_MALLOC(size) malloc(size)
-#    define PAL_REALLOC(ptr, size) realloc(ptr, size)
-#    define PAL_FREE(ptr) free(ptr)
-#endif
-
 // include ftg_core.h ahead of this header to debug it
 #ifdef FTG_ASSERT
 #    define PAL__ASSERT(exp) FTG_ASSERT(exp)
@@ -157,7 +142,6 @@ typedef struct {
 } pal_dither_pair_t;
 
 typedef struct pal_palette_s {
-    unsigned short version;
     pal_str_t      title;
     pal_source_t   source;
 
@@ -916,7 +900,7 @@ pal_parse_aco(const unsigned char* bytes,
     const unsigned char* p_bytes = bytes;
     //
     //  parse header
-    out_pal->version = pal__read_beu16(&p_bytes);
+    /* out_pal->version = */ pal__read_beu16(&p_bytes);
     if (PAL__AT_END_OF_DATA) {
         PAL__ASSERT(!"end of bytes reading header");
         return 1;
@@ -1259,7 +1243,6 @@ pal_lightness_cb(pal_color_t col0, pal_color_t col1, void* datum)
 void
 pal_init(pal_palette_t* pal)
 {
-    pal->version = 0;
     pal->title[0] = 0;
     pal->source.url[0] = 0;
     pal->source.conversion_tool[0] = 0;

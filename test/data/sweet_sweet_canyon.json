@@ -1,0 +1,124 @@
+{
+    "palettes": [
+        {
+            "title": "Sweet, Sweet Canyon",
+            "color_hash": "2366314024",
+            "source": {
+                "conversion_tool": "ftg_palette.h - https://github.com/frogtoss/ftg_toolbox_public",
+                "conversion_date": "1705727679"
+            },
+
+            "colors": [
+                {
+                    "name": "pink sky",
+                    "red": 0.96470584,
+                    "green": 0.72941179,
+                    "blue": 0.69019608,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "ground background",
+                    "red": 0.98039216,
+                    "green": 0.83137254,
+                    "blue": 0.30196080,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "background candy",
+                    "red": 0.81568632,
+                    "green": 0.70980396,
+                    "blue": 0.39215686,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "road",
+                    "red": 0.98431377,
+                    "green": 0.87450981,
+                    "blue": 0.58823533,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "road edge highlight",
+                    "red": 0.99215688,
+                    "green": 0.99607839,
+                    "blue": 0.83921566,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "road edge shadow",
+                    "red": 0.76078433,
+                    "green": 0.65490198,
+                    "blue": 0.48627452,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "obstruction top",
+                    "red": 0.98823528,
+                    "green": 0.81176471,
+                    "blue": 0.73725490,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "obstruction side",
+                    "red": 0.83921566,
+                    "green": 0.61568632,
+                    "blue": 0.44705882,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "marizpan",
+                    "red": 0.61176471,
+                    "green": 0.31764707,
+                    "blue": 0.19215686,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "layer",
+                    "red": 0.88235292,
+                    "green": 0.41960783,
+                    "blue": 0.30196080,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "yummy candy",
+                    "red": 0.76078433,
+                    "green": 0.85882358,
+                    "blue": 0.45882353,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "toffee1",
+                    "red": 0.97254905,
+                    "green": 0.76862745,
+                    "blue": 0.22745099,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "toffee2",
+                    "red": 0.97647056,
+                    "green": 1.0,
+                    "blue": 0.23137254,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "darkgray",
+                    "red": 0.10196079,
+                    "green": 0.10196079,
+                    "blue": 0.10196079,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "pure red",
+                    "red": 1.0,
+                    "green": 0.00000000,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                }
+            ]
+
+
+
+        }
+    ]
+}
+

@@ -199,7 +199,7 @@ main(int argc, char* argv[])
     kgflags_string("sort-png",
                    NULL,
                    "when exporting as png, use a sort (supported: red, green, "
-                   "blue, hue, saturation, value, brightness)",
+                   "blue, hue, saturation, value, lightness)",
                    false,
                    &args.png_sort_kind);
     kgflags_int("json-palette-index",
@@ -275,7 +275,7 @@ main(int argc, char* argv[])
     } break;
 
     default:
-        fatal("Unsupported input kind. Only 'ACO' is currently supported");
+        fatal("Unsupported input kind. --help lists supported kinds");
     }
 
     //

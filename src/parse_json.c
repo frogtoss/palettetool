@@ -30,6 +30,9 @@
 
    - uses libc routines for string to number conversion, which
      conflate 0 and error, so silent errors to 0 can occur
+    
+   - single-pass parsing: colors array must appear and name all 
+     colors before any subsequent fields reference those names
 
    - it's fast
 
@@ -414,7 +417,7 @@ parse_palette_color_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
         return 1;
     }
 
-    if (ctx->tok[*i].start < obj_end_index) {
+    if (!JSON_EOF && ctx->tok[*i].start < obj_end_index) {
         json_error(ctx, "invalid token type found in color subobject", *i);
         return 1;
     }
@@ -448,7 +451,7 @@ parse_palette_colors_subarray(json_context_t* ctx, int* i, pal_palette_t* pal)
     }
 
 
-    if (ctx->tok[*i].start < array_end_index) {
+    if (!JSON_EOF && ctx->tok[*i].start < array_end_index) {
         // iterator still in subarray -- something other than an
         // object was found.
         json_error(ctx, "invalid token type found in colors array", *i);

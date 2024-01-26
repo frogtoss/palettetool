@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/palettetool_d",
-            "args": [],
+            "args": ["--in", "../test/data/sweet_sweet_canyon.json", "--out", "/tmp/out.png"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],
