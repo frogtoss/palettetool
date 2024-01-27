@@ -30,8 +30,8 @@
 
    - uses libc routines for string to number conversion, which
      conflate 0 and error, so silent errors to 0 can occur
-    
-   - single-pass parsing: colors array must appear and name all 
+
+   - single-pass parsing: colors array must appear and name all
      colors before any subsequent fields reference those names
 
    - it's fast
@@ -504,15 +504,9 @@ static int
 parse_palette_hints_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
 {
     int hints_object_end = ctx->tok[*i].end;
-    int hints_subdoc_tokens = ctx->tok[*i].size * 2;
 
     if (json_match(ctx, JSMN_OBJECT, i) != 0)
         return 1;
-
-    if (hints_subdoc_tokens > pal->num_colors) {
-        json_error(ctx, "more hints than palette colors", *i);
-        return 1;
-    }
 
     // initialize all colors to zero hints
     for (int j = 0; j < PAL_MAX_COLORS; j++) pal->num_hints[j] = 0;

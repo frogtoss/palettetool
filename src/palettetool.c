@@ -9,13 +9,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "parse_json.h"
 
 #include "3rdparty/ftg_core.h"
 #include "3rdparty/ftg_palette.h"
 #include "3rdparty/kgflags.h"
 #include "3rdparty/stb_image_write.h"
 
+#include "parse_json.h"
 
 struct args_s {
     const char* in_file;
@@ -61,6 +61,7 @@ void
 fatal(const char* msg)
 {
     fprintf(stderr, "fatal: %s\n", msg);
+
     exit(1);
 }
 

@@ -1,0 +1,157 @@
+{
+    "palettes": [
+        {
+            "title": "Copper Theme by Michael Labbe",
+            "source": {
+                "conversion_tool": "ftg_palette extractor.py",
+                "conversion_date": "1706314267"
+            },
+            "colors": [
+                {
+                    "name": "fg-1",
+                    "red": 0.71484375,
+                    "green": 0.734375,
+                    "blue": 0.7265625,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "fg-2",
+                    "red": 0.875,
+                    "green": 0.875,
+                    "blue": 0.875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "fg-3",
+                    "red": 0.8828125,
+                    "green": 0.91015625,
+                    "blue": 0.91015625,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "fg-contrast",
+                    "red": 0.6953125,
+                    "green": 0.734375,
+                    "blue": 0.38671875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "fg-highlight",
+                    "red": 0.41796875,
+                    "green": 0.640625,
+                    "blue": 0.74609375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "fg-light-highlight",
+                    "red": 1.0,
+                    "green": 0.76171875,
+                    "blue": 0.41796875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "fg-light-highlight-2",
+                    "red": 0.97265625,
+                    "green": 0.5546875,
+                    "blue": 0.34375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "fg-bright",
+                    "red": 0.875,
+                    "green": 0.3046875,
+                    "blue": 0.0859375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "fg-cool",
+                    "red": 0.7421875,
+                    "green": 0.578125,
+                    "blue": 0.734375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "fg-comment",
+                    "red": 0.5859375,
+                    "green": 0.59375,
+                    "blue": 0.58984375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "bg-comment",
+                    "red": 0.16796875,
+                    "green": 0.19140625,
+                    "blue": 0.20703125,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "bg-1",
+                    "red": 0.10546875,
+                    "green": 0.12109375,
+                    "blue": 0.1328125,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "bg-bright",
+                    "red": 0.234375,
+                    "green": 0.26953125,
+                    "blue": 0.296875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "cursor",
+                    "red": 1.0,
+                    "green": 1.0,
+                    "blue": 0.625,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "block-highlight-bg",
+                    "red": 0.0,
+                    "green": 0.34375,
+                    "blue": 0.5390625,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "block-highlight-bg-dark",
+                    "red": 0.0,
+                    "green": 0.25390625,
+                    "blue": 0.39453125,
+                    "alpha": 1.0
+                }
+            ],
+            "hints": {
+                "fg-1": ["normal"],
+                "fg-2": ["normal"],
+                "fg-3": ["urgent", "highlight"],
+                "fg-contrast": ["subtitle", "bold"],
+                "fg-light-highlight": ["highlight", "title"],
+                "fg-light-highlight-2": ["urgent", "bold"],
+                "fg-bright": ["fixme", "todo", "warning"],
+                "fg-cool": ["subtitle", "subsubtitle"],
+                "fg-comment": ["background highlight"],
+                "bg-comment": ["background"],
+                "bg-1": ["background", "shadow"],
+                "bg-bright": ["background highlight", "focal point"],
+                "cursor": ["focal point"],
+                "block-highlight-bg": ["selection", "background highlight"],
+                "block-highlight-bg-dark": ["selection", "background"],
+            },
+            "gradients": {
+                "dark to light": [
+                    "bg-bright",
+                    "bg-1",
+                    "fg-comment",
+                    "bg-1",
+                    "fg-1",
+                    "fg-2",
+                    "fg-3"
+                ]
+            },
+            "dither_pairs": {
+                "comment": ["fg-comment", "bg-comment"],
+                "block-highlight": ["block-highlight-bg", "block-highlight-bg-dark"]
+            }
+        }
+    ]
+}

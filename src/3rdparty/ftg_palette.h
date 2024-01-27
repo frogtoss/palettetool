@@ -20,7 +20,7 @@
 
    REVISION HISTORY
 
-   0.1  (tododate)   Initial version
+   0.1  (Jan 2024)   Initial version
 
    LICENSE
 
@@ -126,6 +126,7 @@ typedef enum {
     HINT_SUBTLE,
     HINT_SHADOW,
     HINT_SPECULAR,
+    HINT_SELECTION,
     HINT_MAX,  // always last
 } pal_hint_kind_t;
 
@@ -180,6 +181,24 @@ int pal_parse_aco(const unsigned char* bytes,
                   unsigned int         len,
                   pal_palette_t*       out_pal,
                   const char*          aco_source_url);
+
+// parse a hex color string into a pal_color_t
+// no '#' prefix, and accepts len as:
+// 3 hex chars for rgb   eg: ccc     (shorthand for cccccc)
+// 4 hex chars for rgba  eg: cccf
+// 6 hex chars for rgb   eg: c0c0c0
+// 8 hex chars for rgba  eg: c0c0c0ff
+//
+// hex_str does not need to be null terminated
+// case insensitive
+// assumes opaque (full alpha) if alpha nonspecified
+int pal_parse_hexcolor(const char *hex_str, int len, pal_color_t *out_color);
+
+// output a hex color for a given pal_color_t
+// output is not prefixed with '#', outputs lowercase hex values
+// and includes alpha and adds a null terminator.
+// eg: 'ff00a0ff'
+void pal_color_to_hex(const pal_color_t *color, char out_str[9]);
 
 // allows a quick 32-bit integer comparison to test for color
 // equivalency between palettes
@@ -277,7 +296,7 @@ pal__append_buf_tabs(char** out_buf, int* out_buf_remaining, int num_tabs)
 }
 
 static char*
-pal__int_to_str(unsigned long long val, char* buf, int len)
+pal__int_to_str(unsigned long long val, char* buf, int len, int base)
 {
     // write to the end of the given buffer, not the beginning, and
     // reverse towards greatest digit.
@@ -286,9 +305,13 @@ pal__int_to_str(unsigned long long val, char* buf, int len)
     *p_buf-- = 0;
 
     do {
-        unsigned long long digit = val % 10;
-        val /= 10;
-        *--p_buf = '0' + (char)digit;
+        unsigned long long digit = val % base;
+        val /= base;
+
+        if (digit < 10)
+            *--p_buf = '0' + (char)digit;
+        else 
+            *--p_buf = 'a' + (char)(digit - 10);
     } while (val && p_buf >= buf);
 
     return p_buf;
@@ -429,7 +452,7 @@ pal_emit_palette_json(const pal_palette_t* pals, int num_pals, char* out_buf, in
         PAL__APPEND_JSON_KEYVALUE_STRING("title", pal->title, 1);
 
         // color hash
-        p_num_buf = pal__int_to_str(pal_hash_color_values(pal), num_buf, 64);
+        p_num_buf = pal__int_to_str(pal_hash_color_values(pal), num_buf, 64, 10);
         PAL__APPEND_JSON_KEYVALUE_STRING("color_hash", p_num_buf, 1);
 
         //
@@ -445,7 +468,7 @@ pal_emit_palette_json(const pal_palette_t* pals, int num_pals, char* out_buf, in
                 "conversion_tool", pal->source.conversion_tool, 1);
         }
 
-        p_num_buf = pal__int_to_str(pal->source.conversion_timestamp, num_buf, 64);
+        p_num_buf = pal__int_to_str(pal->source.conversion_timestamp, num_buf, 64, 10);
         PAL__APPEND_JSON_KEYVALUE_STRING("conversion_date", p_num_buf, 0);
         tab--;
         PAL__APPEND(PAL__3TAB "},\n\n");  // source
@@ -1038,6 +1061,8 @@ pal_convert_channel_to_f32(pal_u8_t val)
 {
     if (val == 127)
         return 0.5f;
+    if (val == 255)
+        return 1.0f;
     return val / 256.0f;
 }
 
@@ -1051,7 +1076,8 @@ const char* pal__enum_strings[HINT_MAX] = {
     "subtitle",     "subsubtitle",
     "todo",         "fixme",
     "sidebar",      "subtle",
-    "shadow",       "specular"};
+    "shadow",       "specular",
+    "selection"};
 
 PALDEF const char*
 pal_string_for_hint(pal_hint_kind_t hint)
@@ -1252,6 +1278,108 @@ pal_init(pal_palette_t* pal)
     pal->num_dither_pairs = 0;
 
     for (int i = 0; i < PAL_MAX_HINTS; i++) pal->num_hints[i] = 0;
+}
+
+static int pal__scan_int(const char *str, int num_digits, int base, pal_u16_t *out_int) {
+    
+    const char *p = str;
+    pal_u16_t val = 0;
+    for (int i = 0; i < num_digits; i++) {
+        pal_u16_t digit;
+
+        if (*p >= '0' && *p <= '9')
+            digit = *p - '0';
+        else if (*p >= 'A' && *p <= 'F')
+            digit = *p - 'A' + 10;
+        else if (*p >= 'a' && *p <= 'f')
+            digit = *p - 'a' + 10;
+        else {
+            PAL__ASSERT(!"invalid digit in hex string");
+            return 1;
+        }
+
+        PAL__ASSERT(digit < base);
+        val = val * base + digit;
+    }
+
+    *out_int = val;
+    return 0;
+}
+
+int
+pal_parse_hexcolor(const char *hex_str, int len, pal_color_t *out_color) {
+    PAL__ASSERT(len == 3 || len == 4 || len == 6 || len == 8);
+    PAL__ASSERT(hex_str[0] != '#');
+
+
+    pal_color_t color;
+    pal_u16_t chan[4];
+    int result = 0;
+
+    if (len == 3 || len == 4) {
+        result |= pal__scan_int(&hex_str[0], 1, 16, &chan[0]);
+        result |= pal__scan_int(&hex_str[1], 1, 16, &chan[1]);
+        result |= pal__scan_int(&hex_str[2], 1, 16, &chan[2]);
+        if (len == 4)
+            result |= pal__scan_int(&hex_str[3], 1, 16, &chan[3]);                    
+
+        if (result != 0)
+            return 1;
+
+        color.c[0] = pal_convert_channel_to_f32(chan[0] << 4 | chan[0]);
+        color.c[1] = pal_convert_channel_to_f32(chan[1] << 4 | chan[1]);
+        color.c[2] = pal_convert_channel_to_f32(chan[2] << 4 | chan[2]);
+
+        if (len == 3)
+            color.c[3] = 1.0f;
+        else
+            color.c[3] = pal_convert_channel_to_f32(chan[3] << 4 | chan[3]);
+
+        *out_color = color;
+
+    } else if (len == 6 || len == 8) {
+        result |= pal__scan_int(&hex_str[0], 2, 16, &chan[0]);
+        result |= pal__scan_int(&hex_str[2], 2, 16, &chan[1]);
+        result |= pal__scan_int(&hex_str[4], 2, 16, &chan[2]);
+        if (len == 8)
+            result |= pal__scan_int(&hex_str[6], 2, 16, &chan[3]);
+
+        if (result != 0)
+            return 1;   
+
+        color.c[0] = pal_convert_channel_to_f32(chan[0]);
+        color.c[1] = pal_convert_channel_to_f32(chan[1]);
+        color.c[2] = pal_convert_channel_to_f32(chan[2]);
+
+        if (len == 6)        
+            color.c[3] = 1.0f;
+        else
+            color.c[3] = pal_convert_channel_to_f32(chan[3]);
+
+        *out_color = color;
+    }
+
+    return 0;
+}
+
+void
+pal_color_to_hex(const pal_color_t *color, char out_str[9]) {
+    char buf[32];
+    char *p = out_str;
+    for (int i = 0; i < 4; i++) {
+        pal_u8_t chan = pal_convert_channel_to_8bit(color->c[i]);
+        char *p_buf = pal__int_to_str(chan, buf, 32, 16);
+        
+        if (p_buf[1] != 0) {
+            *p++ = p_buf[0];
+            *p++ = p_buf[1];
+        } else {
+            // only got a single hex digit back, so prefix with a 0
+            *p++ = '0';
+            *p++ = p_buf[0];
+        }
+    }
+    *p = 0;
 }
 
 //

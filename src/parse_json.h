@@ -1,8 +1,9 @@
 #ifndef PARSE_JSON_H
 #define PARSE_JSON_H
 
+#ifndef PAL__INCLUDE_PALETTE_H
 typedef struct pal_palette_s pal_palette_t;
-
+#endif
 
 int parse_json_into_palettes(
     const char*    json_str,      // json input as null terminated string
