@@ -127,6 +127,20 @@ typedef enum {
     HINT_SHADOW,
     HINT_SPECULAR,
     HINT_SELECTION,
+    HINT_COMMENT,
+    HINT_STRING,
+    HINT_KEYWORD,
+    HINT_VARIABLE,
+    HINT_OPERATOR,
+    HINT_PUNCTUATION,
+    HINT_INACTIVE,
+    HINT_FUNCTION,
+    HINT_METHOD,
+    HINT_PREPROCESSOR,
+    HINT_TYPE,
+    HINT_CONSTANT,
+    HINT_LINK,
+    HINT_CURSOR,
     HINT_MAX,  // always last
 } pal_hint_kind_t;
 
@@ -164,7 +178,7 @@ typedef struct pal_palette_s {
 
 // API declaration starts here
 
-// zero-initialize a palette
+// zero-initialize a palette (optional)
 void pal_init(pal_palette_t* pal);
 
 // Convert a value in range 0-1 to an 8-bit channel between 0x0 and 0xFF
@@ -1077,7 +1091,15 @@ const char* pal__enum_strings[HINT_MAX] = {
     "todo",         "fixme",
     "sidebar",      "subtle",
     "shadow",       "specular",
-    "selection"};
+    "selection",    "comment",
+    "string",       "keyword",
+    "variable",     "operator",
+    "puncutation",  "inactive",
+    "function",     "method",
+    "preprocessor", "type",
+    "constant",     "link",
+    "cursor"
+};
 
 PALDEF const char*
 pal_string_for_hint(pal_hint_kind_t hint)
