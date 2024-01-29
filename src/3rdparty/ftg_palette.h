@@ -1112,10 +1112,11 @@ pal_string_for_hint(pal_hint_kind_t hint)
 PALDEF int
 pal_hint_for_string(const char* str, int len, pal_hint_kind_t* out_hint)
 {
+    int i;
     if (len == 0)
         len = pal__strlen(str);
 
-    for (int i = 0; i < HINT_MAX; i++) {
+    for (i = 0; i < HINT_MAX; i++) {
         // could avoid this waste
         int literal_len = pal__strlen(pal__enum_strings[i]);
 
@@ -1291,6 +1292,7 @@ pal_lightness_cb(pal_color_t col0, pal_color_t col1, void* datum)
 void
 pal_init(pal_palette_t* pal)
 {
+    int i;
     pal->title[0] = 0;
     pal->source.url[0] = 0;
     pal->source.conversion_tool[0] = 0;
@@ -1299,14 +1301,16 @@ pal_init(pal_palette_t* pal)
     pal->num_gradients = 0;
     pal->num_dither_pairs = 0;
 
-    for (int i = 0; i < PAL_MAX_HINTS; i++) pal->num_hints[i] = 0;
+    for (i = 0; i < PAL_MAX_HINTS; i++) pal->num_hints[i] = 0;
 }
 
 static int pal__scan_int(const char *str, int num_digits, int base, pal_u16_t *out_int) {
     
     const char *p = str;
     pal_u16_t val = 0;
-    for (int i = 0; i < num_digits; i++) {
+    int i;
+    
+    for (i = 0; i < num_digits; i++) {
         pal_u16_t digit;
 
         if (*p >= '0' && *p <= '9')
@@ -1388,7 +1392,8 @@ void
 pal_color_to_hex(const pal_color_t *color, char out_str[9]) {
     char buf[32];
     char *p = out_str;
-    for (int i = 0; i < 4; i++) {
+    int i;
+    for (i = 0; i < 4; i++) {
         pal_u8_t chan = pal_convert_channel_to_8bit(color->c[i]);
         char *p_buf = pal__int_to_str(chan, buf, 32, 16);
         
