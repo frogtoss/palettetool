@@ -135,7 +135,7 @@
                 "bg-bright": ["background highlight", "focal point"],
                 "cursor": ["cursor", "focal point"],
                 "block-highlight-bg": ["selection", "background highlight"],
-                "block-highlight-bg-dark": ["selection", "background"],
+                "block-highlight-bg-dark": ["selection", "background"]
             },
             "gradients": {
                 "dark to light": [

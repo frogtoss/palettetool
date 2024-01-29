@@ -32,7 +32,7 @@ def read_file_into_string(file_path):
     try:
         with open(file_path, "rb") as f:
             return f.read().decode('utf-8')
-    except IOError as e:
+    except or as e:
         fatal("Error reading file: " + str(e))
 
 def init_palette_doc():

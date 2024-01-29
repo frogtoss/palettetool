@@ -364,7 +364,7 @@ typedef signed int         int32_t;
 #  if defined(_MSC_VER)
 typedef unsigned __int64   uint64_t;
 typedef signed __int64     int64_t;
-#  elif defined(__GNUC__) && !defined(__EMSCRIPTEN__)
+#  elif defined(__GNUC__) && !defined(__EMSCRIPTEN__) && !defined(__APPLE__)
 typedef __uint64_t uint64_t;
 typedef __int64_t int64_t;
 #else
