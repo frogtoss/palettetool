@@ -36,11 +36,12 @@ typedef enum {
     FILE_KIND_ACO,
     FILE_KIND_PNG,
     FILE_KIND_JSON_PALETTE,
+    FILE_KIND_GIMP_GPL,
 } file_kind_t;
 
 const file_kind_t SUPPORTED_INPUT_FORMATS[] = {FILE_KIND_ACO, FILE_KIND_JSON_PALETTE, 0};
 const file_kind_t SUPPORTED_OUTPUT_FORMATS[] = {
-    FILE_KIND_JSON_PALETTE, FILE_KIND_PNG, 0};
+    FILE_KIND_JSON_PALETTE, FILE_KIND_PNG, FILE_KIND_GIMP_GPL, 0};
 
 const char*
 kind_to_string(file_kind_t kind)
@@ -52,6 +53,8 @@ kind_to_string(file_kind_t kind)
         return "png";
     case FILE_KIND_JSON_PALETTE:
         return "json (palette format)";
+    case FILE_KIND_GIMP_GPL:
+        return "gimp gpl";
     default:
         return "unknown";
     }
@@ -98,6 +101,9 @@ file_kind_for_extension(const char* path)
 
     if (ftg_stricmp(ext, "png") == 0)
         return FILE_KIND_PNG;
+
+    if (ftg_stricmp(ext, "gpl") == 0)
+        return FILE_KIND_GIMP_GPL;
 
     return FILE_KIND_UNKNOWN;
 }
@@ -294,7 +300,7 @@ main(int argc, char* argv[])
         if (result != 0)
             fatal("failed to generate json palette");
 
-        result = ftg_file_write(args.out_file, (u8*)buf, strlen(buf) + 1);
+        result = ftg_file_write(args.out_file, (u8*)buf, strlen(buf));
         if (result == 0)
             fatal(ftg_va("failed to write json palette to '%s'", args.out_file));
 
@@ -325,9 +331,23 @@ main(int argc, char* argv[])
         }
 
         FTG_FREE(image_data);
-    }
+    } break;
 
-    break;
+    case FILE_KIND_GIMP_GPL: {
+        usize output_buf_bytes = (1 << 15);
+        char* buf = FTG_MALLOC(sizeof(u8), output_buf_bytes);
+
+        int result = pal_emit_gimp_gpl(&palette, buf, (int)output_buf_bytes);
+        if (result != 0)
+            fatal("failed to generate gimp gpl palette");
+
+        result = ftg_file_write(args.out_file, (u8*)buf, strlen(buf));
+        if (result == 0)
+            fatal(ftg_va("failed to write gimp gpl palette to '%s'", args.out_file));
+
+
+        FTG_FREE(buf);
+    } break;
 
     default:
         fatal("Unsupported output kind. Only json palette is currently "
