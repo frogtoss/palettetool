@@ -49,3 +49,7 @@ Tested on Windows and Linux.
 ### From Visual Studio ###
 
 Open `build\vs2022\Palette Tool.sln` in explorer and build.
+
+## Extra Tools ##
+
+`tools/palette2jinja.py` reads in a palette json document and a Jinja template, letting you output whatever textual format you want.  A few samples are available under `tools/tmpl`.

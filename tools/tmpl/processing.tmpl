@@ -1,0 +1,9 @@
+
+// declare processing.org palette colors in global scope
+color[] palette = new color[{{ doc.palettes[0]|length-1 }}];
+
+void setup_colors() {
+{%- for color in doc.palettes[0].colors %}
+    palette[{{ loop.index0 }}] = color({{ color.red|to_8bit }}, {{ color.green|to_8bit }}, {{ color.blue|to_8bit }});
+{%- endfor %}
+}

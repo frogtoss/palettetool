@@ -1,0 +1,15 @@
+# Palette document with {{ doc.palettes|length }} palettes. #
+
+{% for palette in doc.palettes %}
+
+{% if palette.title %}
+## {{ palette.title }} ##
+{% else %}
+## (untitled) ##
+{% endif %}
+
+{% for color in palette.colors -%}
+ - {{ color.name }}: #{{ color|hexcolor_rgb }} aka {{ color.red|to_8bit }}, {{ color.green|to_8bit }}, {{ color.blue|to_8bit }}
+{% endfor %}
+
+{% endfor %}

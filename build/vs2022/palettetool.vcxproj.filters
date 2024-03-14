@@ -21,6 +21,9 @@
     <ClInclude Include="..\..\src\3rdparty\kgflags.h">
       <Filter>3rdparty</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\3rdparty\stb_image.h">
+      <Filter>3rdparty</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\3rdparty\stb_image_write.h">
       <Filter>3rdparty</Filter>
     </ClInclude>

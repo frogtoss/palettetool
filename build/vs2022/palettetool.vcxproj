@@ -178,6 +178,7 @@
     <ClInclude Include="..\..\src\3rdparty\ftg_palette.h" />
     <ClInclude Include="..\..\src\3rdparty\jsmn.h" />
     <ClInclude Include="..\..\src\3rdparty\kgflags.h" />
+    <ClInclude Include="..\..\src\3rdparty\stb_image.h" />
     <ClInclude Include="..\..\src\3rdparty\stb_image_write.h" />
     <ClInclude Include="..\..\src\config\palconfig.h" />
     <ClInclude Include="..\..\src\parse_json.h" />
