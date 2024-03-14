@@ -196,6 +196,17 @@ int pal_parse_aco(const unsigned char* bytes,
                   pal_palette_t*       out_pal,
                   const char*          aco_source_url);
 
+// parse bytes representing 8-bit channels into a pal_palette_t
+// useful for parsing, say, an image loaded from stb_image.
+//
+// channels is 3 or 4
+// bytes is assumed to be rgb or rgba
+int pal_parse_bytes(const unsigned char *bytes,
+                    unsigned int len,
+                    int num_channels,
+                    pal_palette_t *out_pal,
+                    const char *data_url);
+
 // parse a hex color string into a pal_color_t
 // no '#' prefix, and accepts len as:
 // 3 hex chars for rgb   eg: ccc     (shorthand for cccccc)
@@ -1109,6 +1120,70 @@ pal_parse_aco(const unsigned char* bytes,
 
 #undef PAL__AT_END_OF_DATA
 #undef PAL__DOES_NOT_HAVE_BYTES
+
+
+int pal_parse_bytes(const unsigned char *bytes,
+                    unsigned int len,
+                    int num_channels,
+                    pal_palette_t *out_pal,
+                    const char *data_url)
+{
+    if (num_channels != 3 && num_channels != 4) {
+        PAL__ASSERT(!"num_channels must be 3 or 4");
+        return 1;
+    }
+
+    if ((len % num_channels) != 0) {
+        PAL__ASSERT(!"more input bytes than expected for number of channels");
+        return 1;
+    }
+
+    if (len / num_channels > PAL_MAX_COLORS) {
+        PAL__ASSERT(!"PAL_MAX_COLORS exceeded");
+        return 1;
+    }
+
+    if (data_url != NULL) {
+        pal__strncpy(out_pal->source.url, data_url, PAL_MAX_STRLEN);
+    }
+    pal__strncpy(
+        out_pal->source.conversion_tool,
+        "ftg_palette.h - https://github.com/frogtoss/ftg_toolbox_public",
+        PAL_MAX_STRLEN);
+    out_pal->source.conversion_timestamp = PAL_TIME(NULL);
+    
+    // one slow loop to rule them all
+    pal_u16_t i = 0;
+    for (const pal_u8_t *p = bytes; p < bytes + len; p += num_channels, i++) {
+        out_pal->colors[i].rgba.r = pal_convert_channel_to_f32(p[0]);
+        out_pal->colors[i].rgba.g = pal_convert_channel_to_f32(p[1]);
+        out_pal->colors[i].rgba.b = pal_convert_channel_to_f32(p[2]);
+        out_pal->colors[i].rgba.a = num_channels == 4 ? pal_convert_channel_to_f32(p[3]) : 1.0f;
+    }
+    out_pal->num_colors = i;
+
+
+    for (i = 0; i < out_pal->num_colors; i++) {
+        char num_buf[64];
+
+        char *p_num_buf = pal__int_to_str(i, num_buf, 64, 10);
+        int num_len = pal__strlen(p_num_buf);
+        
+        pal__strncpy(out_pal->color_names[i], p_num_buf, PAL_MAX_STRLEN);
+        pal__strncpy(out_pal->color_names[i] + num_len, " from bytes", PAL_MAX_STRLEN - num_len); 
+
+        out_pal->color_names[i];
+    }
+
+    // fill out the remaining fields
+    out_pal->title[0] = 0;
+    out_pal->num_gradients = 0;
+    out_pal->num_dither_pairs = 0;
+    for (i = 0; i < PAL_MAX_COLORS; i++) out_pal->num_hints[i] = 0;
+    
+    
+    return 0;
+}
 
 PALDEF pal_u8_t
 pal_convert_channel_to_8bit(float val)

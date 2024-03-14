@@ -1,10 +1,14 @@
 /* palettetool Copyright (C) 2024 Frogtoss Games, Inc. */
 
 
+
 #define FTG_IMPLEMENT_PALETTE
 #define FTG_IMPLEMENT_CORE
 #define KGFLAGS_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_ONLY_PNG
+#define STBI_SUPPORT_ZLIB
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,6 +18,7 @@
 #include "3rdparty/ftg_palette.h"
 #include "3rdparty/kgflags.h"
 #include "3rdparty/stb_image_write.h"
+#include "3rdparty/stb_image.h"
 
 #include "parse_json.h"
 
@@ -39,7 +44,8 @@ typedef enum {
     FILE_KIND_GIMP_GPL,
 } file_kind_t;
 
-const file_kind_t SUPPORTED_INPUT_FORMATS[] = {FILE_KIND_ACO, FILE_KIND_JSON_PALETTE, 0};
+const file_kind_t SUPPORTED_INPUT_FORMATS[] = {
+    FILE_KIND_ACO, FILE_KIND_JSON_PALETTE, FILE_KIND_PNG, 0};
 const file_kind_t SUPPORTED_OUTPUT_FORMATS[] = {
     FILE_KIND_JSON_PALETTE, FILE_KIND_PNG, FILE_KIND_GIMP_GPL, 0};
 
@@ -281,6 +287,36 @@ main(int argc, char* argv[])
         if (palette.num_colors == 0) {
             fatal("parsed palette has 0 colors");
         }
+    } break;
+
+    case FILE_KIND_PNG: {
+        int x, y, channels;
+        u8* png_bytes = stbi_load(args.in_file, &x, &y, &channels, 0);
+
+        if (!png_bytes) {
+            fatal(ftg_va("error loading '%s'", args.in_file));
+        }
+        if (y != 1) {
+            fatal(ftg_va("Expected to find a 1px-high png file, where every "
+                         "pixel is a color for the palette, got %d pixels high",
+                         y));
+        }
+
+        // we don't sort out uniques
+        if (x > PAL_MAX_COLORS) {
+            fatal(ftg_va("too many pixels in png file: %d > %d PAL_MAX_COLORS",
+                         x,
+                         PAL_MAX_COLORS));
+        }
+
+        int result =
+            pal_parse_bytes(png_bytes, x * y * channels, channels, &palette, NULL);
+        if (result != 0) {
+            fatal(ftg_va(
+                "Failed to parse %dx%d png with %d channels per color", x, y, channels));
+        }
+
+        FTG_FREE(png_bytes);
     } break;
 
     default:
