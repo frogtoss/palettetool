@@ -197,7 +197,7 @@ def run_premake(build_subdir, premake_filename):
 
 # scan for vs* subdirs, returning the highest one
 def get_highest_vs_version():
-    vs_dir_matcher = re.compile('^vs(\d+)')
+    vs_dir_matcher = re.compile(r'^vs(\d+)')
 
     highest_version = 0
 

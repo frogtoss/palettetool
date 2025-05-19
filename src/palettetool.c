@@ -1,4 +1,4 @@
-/* palettetool Copyright (C) 2024 Frogtoss Games, Inc. */
+/* palettetool Copyright (C) 2024-2025 Frogtoss Games, Inc. */
 
 
 
@@ -18,7 +18,7 @@
 #include "3rdparty/ftg_palette.h"
 #include "3rdparty/kgflags.h"
 #include "3rdparty/stb_image_write.h"
-#include "3rdparty/stb_image.h"
+#include "image.h"
 
 #include "parse_json.h"
 

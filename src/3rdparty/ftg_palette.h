@@ -188,8 +188,7 @@ pal_u8_t pal_convert_channel_to_8bit(float val);
 float pal_convert_channel_to_f32(pal_u8_t val);
 
 // parse an adobe aco file into a pal_palette_t
-// currently only works on v2 (as used by Photopea)
-//
+// 
 // if aco_source_url is NULL, no URL will be specified
 int pal_parse_aco(const unsigned char* bytes,
                   unsigned int         len,
@@ -1004,11 +1003,17 @@ pal_parse_aco(const unsigned char* bytes,
     const unsigned char* p_bytes = bytes;
     //
     //  parse header
-    /* out_pal->version = */ pal__read_beu16(&p_bytes);
+    pal_u16_t version = pal__read_beu16(&p_bytes);
     if (PAL__AT_END_OF_DATA) {
         PAL__ASSERT(!"end of bytes reading header");
         return 1;
     }
+
+    if (version != 1 && version != 2) {
+        PAL__ASSERT(!"aco file version must be 1 or 2");
+        return 1;
+    }
+    
     out_pal->num_colors = pal__read_beu16(&p_bytes);
     if (PAL__AT_END_OF_DATA) {
         PAL__ASSERT(!"end of bytes after header");
@@ -1060,9 +1065,6 @@ pal_parse_aco(const unsigned char* bytes,
         aco_color.x = pal__read_beu16(&p_bytes);
         aco_color.y = pal__read_beu16(&p_bytes);
         aco_color.z = pal__read_beu16(&p_bytes);
-        aco_color.zero = pal__read_beu16(&p_bytes);
-        aco_color.string_len = pal__read_beu16(&p_bytes);
-
 
         switch (aco_color.color_space) {
         case CS_RGB:
@@ -1095,18 +1097,26 @@ pal_parse_aco(const unsigned char* bytes,
             return 1;
         }
 
-        // confirm enough bytes for string
-        if (PAL__DOES_NOT_HAVE_BYTES(aco_color.string_len)) {
-            PAL__ASSERT(!"end of bytes parsing color's string name");
-            return 1;
-        }
-        if (aco_color.string_len > 0)
-            pal__utf16be_to_utf8(&p_bytes,
-                                 (int)aco_color.string_len,
-                                 out_pal->color_names[i],
-                                 PAL_MAX_STRLEN);
-        else
+        if (version == 2) {
+            aco_color.zero = pal__read_beu16(&p_bytes);
+            aco_color.string_len = pal__read_beu16(&p_bytes);
+            
+            // confirm enough bytes for string
+            if (PAL__DOES_NOT_HAVE_BYTES(aco_color.string_len)) {
+                PAL__ASSERT(!"end of bytes parsing color's string name");
+                return 1;
+            }
+            if (aco_color.string_len > 0)
+                pal__utf16be_to_utf8(&p_bytes,
+                                     (int)aco_color.string_len,
+                                     out_pal->color_names[i],
+                                     PAL_MAX_STRLEN);
+            else
+                out_pal->color_names[i][0] = 0;
+        } else {
+            /* version 1 does not have color names */
             out_pal->color_names[i][0] = 0;
+        }
     }
 
     // fill out the remaining fields
@@ -1171,8 +1181,6 @@ int pal_parse_bytes(const unsigned char *bytes,
         
         pal__strncpy(out_pal->color_names[i], p_num_buf, PAL_MAX_STRLEN);
         pal__strncpy(out_pal->color_names[i] + num_len, " from bytes", PAL_MAX_STRLEN - num_len); 
-
-        out_pal->color_names[i];
     }
 
     // fill out the remaining fields
