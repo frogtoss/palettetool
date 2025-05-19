@@ -1,3 +1,6 @@
+// partial hexpat reader -- used to parse aco files, but not completely
+// don't expect a lot
+
 #pragma endian big
 
 struct Header {

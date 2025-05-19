@@ -87,7 +87,7 @@ print_header(void)
 {
     printf("palettetool\n\ta command-line pipeline tool to convert between "
            "palette formats\n");
-    printf("Copyright (C) 2024 Frogtoss Games, Inc.\n");
+    printf("Copyright (C) 2024-2025 Frogtoss Games, Inc.\n");
 }
 
 

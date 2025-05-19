@@ -1,0 +1,127 @@
+// open palette grain specification
+
+attr optional;
+
+// generate an array index if supported, or else use a string name
+attr indexOrName;
+
+// the value must be unique for the array
+attr unique;
+
+struct OpenPalette {
+   Palette palettes[],
+}
+
+struct Attribution {
+       // tool used convert a palette to this format
+       str conversion_tool,
+
+       // timestamp of the conversion
+       datetime conversion_date
+}
+
+struct Color {
+       str name
+       [unique],
+
+       f32 red,
+       f32 green,
+       f32 blue,
+       f32 alpha,
+}
+
+bitfield HintFlags {
+    error,
+    warning,
+    normal,
+    success,
+    highlight,
+    urgent,
+    low_priority,
+    bold,
+    background,
+    background_highlight,
+    focal_point,
+    title,
+    subtitle,
+    subsubtitle,
+    todo,
+    fixme,
+    sidebar,
+    subtle,
+    shadow,
+    specular,
+    selection,
+    comment,
+    string,
+    keyword,
+    variable,
+    operator,
+    punctuation,
+    inactive,
+    function,
+    method,
+    preprocessor,
+    type,
+    constant,
+    link,
+    cursor,          
+}
+
+struct Hint {
+    ptr colorRef
+    [indexOrName]
+    [unique],
+    
+    HintFlags hints,
+}
+
+struct Gradient {
+    // a unique name for the gradient
+    str name
+    [unique],
+
+    ptr str colorRef
+    [indexOrName],
+}
+
+struct DitherPair {
+
+    str name
+    [unique],
+
+    // first color in the dither pair
+    str colorRef0
+    [indexOrName],
+
+    // second color in the dither pair
+    str colorRef1
+    [indexOrName],
+}
+
+struct Palette {
+
+   // description for this palette
+   str title,
+
+   // hash id for the palette for fast palette comparison
+   str color_hash
+   [optional],
+
+   // information about the palette owner
+   Attribution source
+   [optional],
+
+   // All of the colors in the palette
+   ptr colors,
+
+   // Indicators of what a color might be used for
+   ptr Hint hints,
+
+   // Named gradients
+   ptr Gradient gradients,
+
+   // Dither pairs
+   ptr DitherPairs dither_pairs,
+
+}
