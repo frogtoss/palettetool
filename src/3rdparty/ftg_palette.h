@@ -21,6 +21,7 @@
    REVISION HISTORY
 
    0.1  (Jan 2024)   Initial version
+   0.2  (May 2025)   Colorspaces
 
    LICENSE
 
@@ -156,9 +157,17 @@ typedef struct {
     pal_u16_t index1;
 } pal_dither_pair_t;
 
+typedef struct {
+    pal_str_t name;
+    pal_str_t icc_filename;
+    int is_linear;
+} pal_color_space_t;
+
 typedef struct pal_palette_s {
     pal_str_t      title;
     pal_source_t   source;
+
+    pal_color_space_t color_space;
 
     pal_u16_t   num_colors;
     pal_str_t   color_names[PAL_MAX_COLORS];
@@ -190,16 +199,22 @@ float pal_convert_channel_to_f32(pal_u8_t val);
 // parse an adobe aco file into a pal_palette_t
 // 
 // if aco_source_url is NULL, no URL will be specified
+//
+// assign the color space sRGB to the colors, but perform
+// no data conversion
 int pal_parse_aco(const unsigned char* bytes,
                   unsigned int         len,
                   pal_palette_t*       out_pal,
                   const char*          aco_source_url);
+                  
 
 // parse bytes representing 8-bit channels into a pal_palette_t
 // useful for parsing, say, an image loaded from stb_image.
 //
 // channels is 3 or 4
 // bytes is assumed to be rgb or rgba
+//
+// assign
 int pal_parse_bytes(const unsigned char *bytes,
                     unsigned int len,
                     int num_channels,
@@ -207,8 +222,11 @@ int pal_parse_bytes(const unsigned char *bytes,
                     const char *data_url);
 
 // parse a GIMP .gpl palette file into a pal_palette_t
-//
+// 
 // if aco_source_url is NULL, no URL will be specified
+//
+// assign the color space sRGB to the colors, but perform
+// no data conversion
 int pal_parse_gpl(const unsigned char*bytes,
                   unsigned int len,
                   pal_palette_t* out_pal,
@@ -295,6 +313,10 @@ float pal_lightness_cb(pal_color_t col0, pal_color_t col1, void* datum);
 #    include <time.h>
 #    define PAL_TIME(n) time(n)
 #endif
+
+#define COLOR_SPACE_SRGB "sRGB"
+#define COLOR_SPACE_LINEAR_SRGB "linear-sRGB"
+#define ICC_SRGB "sRGB IEC61966-2.1.icc"
 
 static int
 pal__append_buf(char** out_buf, int* out_buf_remaining, const char* str)
@@ -508,6 +530,25 @@ pal_emit_palette_json(const pal_palette_t* pals, int num_pals, char* out_buf, in
         tab--;
         PAL__APPEND(PAL__3TAB "},\n\n");  // source
 
+
+        //
+        // colorspace
+        //
+        PAL__APPEND_TABS(tab++);
+        PAL__APPEND("\"color_space\": {\n");
+        if (pal->color_space.name[0]) {
+            PAL__APPEND_JSON_KEYVALUE_STRING("name", pal->color_space.name, 1);
+        }
+
+        if (pal->color_space.icc_filename[0]) {
+            PAL__APPEND_JSON_KEYVALUE_STRING("icc_filename", pal->color_space.icc_filename, 1);
+        }
+
+        PAL__APPEND_JSON_KEYVALUE_STRING("is_linear", (pal->color_space.is_linear ? "true" : "false"), 0);
+        tab--;
+        PAL__APPEND(PAL__3TAB "},\n\n");  // color_space
+        
+        
         //
         // colors block
         //
@@ -1142,6 +1183,9 @@ pal_parse_aco(const unsigned char* bytes,
     out_pal->num_gradients = 0;
     out_pal->num_dither_pairs = 0;
     for (i = 0; i < PAL_MAX_COLORS; i++) out_pal->num_hints[i] = 0;
+    pal__strncpy(out_pal->color_space.name, COLOR_SPACE_SRGB, PAL_MAX_STRLEN);
+    pal__strncpy(out_pal->color_space.icc_filename, ICC_SRGB, PAL_MAX_STRLEN);
+    out_pal->color_space.is_linear = false;
 
     return 0;
 }
@@ -1206,7 +1250,9 @@ int pal_parse_bytes(const unsigned char *bytes,
     out_pal->num_gradients = 0;
     out_pal->num_dither_pairs = 0;
     for (i = 0; i < PAL_MAX_COLORS; i++) out_pal->num_hints[i] = 0;
-    
+    pal__strncpy(out_pal->color_space.name, COLOR_SPACE_LINEAR_SRGB, PAL_MAX_STRLEN);
+    out_pal->color_space.icc_filename[0] = 0;
+    out_pal->color_space.is_linear = true;
     
     return 0;
 }
@@ -1272,7 +1318,10 @@ PALDEF int pal_parse_gpl(const unsigned char *bytes,
     out_pal->num_gradients = 0;
     out_pal->num_dither_pairs = 0;
     for (int i = 0; i < PAL_MAX_COLORS; i++) out_pal->num_hints[i] = 0;
-
+    pal__strncpy(out_pal->color_space.name, COLOR_SPACE_SRGB, PAL_MAX_STRLEN);
+    pal__strncpy(out_pal->color_space.icc_filename, ICC_SRGB, PAL_MAX_STRLEN);
+    out_pal->color_space.is_linear = false;
+    
     pal__strncpy(
         out_pal->source.conversion_tool,
         "ftg_palette.h - https://github.com/frogtoss/ftg_toolbox_public",
