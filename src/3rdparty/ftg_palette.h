@@ -896,6 +896,16 @@ pal__get_rgb(float h, float s, float v, float* r, float* g, float* b)
     return 0;
 }
 
+static pal_u8_t
+pal__clamp8(int in, int clamp_min, int clamp_max)
+{
+    if (in < clamp_min)
+        return clamp_min;
+    if (in > clamp_max)
+        return clamp_max;
+    return in;
+}
+
 static float
 pal__max3(float a, float b, float c)
 {
@@ -1201,18 +1211,18 @@ int pal_parse_bytes(const unsigned char *bytes,
     return 0;
 }
 
-static int pal__is_base_10_digit(unsigned char c) {
+static int pal__is_base_10_digit(char c) {
     return c >= '0' && c <= '9';
 }
 
 
-static int pal__is_space(unsigned char c) {
+static int pal__is_space(char c) {
     return c == ' ' || c == '\t';
 }
 
-static int pal__parse_base10_int(const unsigned char **pp, const unsigned char *end) {
+static int pal__parse_base10_int(const char **pp, const char *end) {
     int val = 0;
-    const unsigned char *p = *pp;
+    const char *p = *pp;
     while (p < end && pal__is_space(*p)) ++p;
     while (p < end && pal__is_base_10_digit(*p)) {
         val = val * 10 + (*p - '0');
@@ -1222,45 +1232,65 @@ static int pal__parse_base10_int(const unsigned char **pp, const unsigned char *
     return val;
 }
 
-static void pal__parse_name(const unsigned char *p, const unsigned char *end, char *out) {
+static void pal__parse_name(const char *p, const char *end, char *out) {
     unsigned int i = 0;
+
+    while (p < end && (*p == ' ')) p++;
+    
     while (p < end && *p != '\n' && *p != '\r' && i < PAL_MAX_STRLEN - 1) {
-        out[i++] = (char)*p++;
+        out[i++] = *p++;
     }
     out[i] = 0;
 }
+
 
 PALDEF int pal_parse_gpl(const unsigned char *bytes,
                   unsigned int len,
                   pal_palette_t* out_pal,
                   const char *gpl_source_url)
 {
-    const unsigned char *p = bytes;
-    const unsigned char *end = bytes + len;
+    const char *p = (const char*)bytes;
+    const char *end = p + (len > 1 ? len - 1 : 0);
 
     const char MAGIC[] = "GIMP Palette\n";
 
     // validate magic
     for (unsigned int i = 0; i < sizeof(MAGIC) - 1; ++i) {
-        if (p >= end || *p != (unsigned char)MAGIC[i])
+        if (p >= end || *p != (unsigned char)MAGIC[i]) {
+            PAL__ASSERT(!"\"GIMP Palette\" magic string not found");
             return 1;
+        }
         ++p;
     }
 
-    int version = 1;
+    if (gpl_source_url != NULL) {
+        pal__strncpy(out_pal->source.url, gpl_source_url, PAL_MAX_STRLEN);
+    }
+    
     out_pal->num_colors = 0;
+    out_pal->title[0] = 0;
+    out_pal->num_gradients = 0;
+    out_pal->num_dither_pairs = 0;
+    for (int i = 0; i < PAL_MAX_COLORS; i++) out_pal->num_hints[i] = 0;
 
-    // Parse optional version 2 headers
+    pal__strncpy(
+        out_pal->source.conversion_tool,
+        "ftg_palette.h - https://github.com/frogtoss/ftg_toolbox_public",
+        PAL_MAX_STRLEN);
+    out_pal->source.conversion_timestamp = PAL_TIME(NULL);
+
+    // Detect version 2, scan ahead to colors
     while (p < end) {
-        // Skip CRs
-        while (p < end && (*p == '\r' || *p == '\n')) ++p;
 
+        while (p < end && (*p == '\n' || *p == ' ' || *p == '\t')) ++p;
+        
         // Check if it's a color line (starts with a digit)
         if (p < end && pal__is_base_10_digit(*p)) break;
 
-        // Check for "Name:" or "Columns:"
-        if ((end - p >= 5) && p[0] == 'N' && p[1] == 'a' && p[2] == 'm' && p[3] == 'e' && p[4] == ':') {
-            version = 2;
+        // Existence of  "Name:" indicates version 2 palette
+        if ((end - p >= 5) && pal__strmatch("Name:", 5, p, 5)) {
+            p += 5;
+            pal__parse_name(p, end, out_pal->title);
         }
 
         // Skip to next line
@@ -1270,7 +1300,7 @@ PALDEF int pal_parse_gpl(const unsigned char *bytes,
 
     // parse color lines
     while (p < end && out_pal->num_colors < PAL_MAX_COLORS) {
-        // Skip leading whitespace
+
         while (p < end && (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n')) ++p;
         if (p >= end || *p == '#') { // Comment
             while (p < end && *p != '\n') ++p;
@@ -1286,10 +1316,9 @@ PALDEF int pal_parse_gpl(const unsigned char *bytes,
 
         out_pal->num_colors++;
 
-        // todo: handle int not fitting
-        col->rgba.r = (uint8_t)r;
-        col->rgba.g = (uint8_t)g;
-        col->rgba.b = (uint8_t)b;
+        col->rgba.r = pal_convert_channel_to_f32(pal__clamp8(r, 0, 255));
+        col->rgba.g = pal_convert_channel_to_f32(pal__clamp8(g, 0, 255));
+        col->rgba.b = pal_convert_channel_to_f32(pal__clamp8(b, 0, 255));
         col->rgba.a = 1.0f;
 
         // Parse optional name
@@ -1300,9 +1329,7 @@ PALDEF int pal_parse_gpl(const unsigned char *bytes,
         while (p < end && *p != '\n') ++p;
         if (p < end && *p == '\n') ++p;
     }
-
-    // todo: do something with version = 2?
-
+    
     return 0;
 }
 

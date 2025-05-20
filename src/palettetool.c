@@ -320,7 +320,18 @@ main(int argc, char* argv[])
     } break;
 
     case FILE_KIND_GIMP_GPL: {
-        // todo: read in gimp gpl
+        ftg_off_t gpl_strlen;
+        u8*       gpl_string = ftg_file_read(args.in_file, true, &gpl_strlen);
+        if (gpl_string == NULL || gpl_strlen <= 1)
+            fatal(ftg_va("could not read '%s'", args.in_file));
+
+        int result =
+            pal_parse_gpl(gpl_string, (unsigned int)gpl_strlen, &palette, NULL);
+        FTG_FREE(gpl_string);
+        if (result != 0) {
+            fatal(ftg_va("failed to parse '%s'", args.in_file));
+        }
+
     } break;
 
     default:
