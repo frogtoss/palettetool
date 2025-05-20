@@ -4,6 +4,7 @@ Convert between palette formats.
 
 Includes support for an 'open palette' JSON format, which has the following features:
 
+ - convert .gpl, .aco, .json open palette and .png files into multiple formats
  - easy to read and parse
  - source fields exist to credit original author
  - 32-bits per channel
@@ -29,6 +30,9 @@ Includes support for an 'open palette' JSON format, which has the following feat
 
     # as above, but sort the colors based on brightness
     palettetool --in swatch_palette.json --out image.png --sort-png brightness
+    
+    # convert from GNU Image Manipulation Program palette to json palette format
+    palettetool --in swatch.gpl --out swatch_palette.json
 
 ## Build ##
 
@@ -53,3 +57,18 @@ Open `build\vs2022\Palette Tool.sln` in explorer and build.
 ## Extra Tools ##
 
 `tools/palette2jinja.py` reads in a palette json document and a Jinja template, letting you output whatever textual format you want.  A few samples are available under `tools/tmpl`.
+
+## Changelog ##
+
+
+### May 2025 ###
+
+ - 0.2 
+ - Add GPL input support
+ - Add docs 
+
+
+### January 2024 ### 
+
+Initial release
+
