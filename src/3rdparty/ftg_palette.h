@@ -544,7 +544,12 @@ pal_emit_palette_json(const pal_palette_t* pals, int num_pals, char* out_buf, in
             PAL__APPEND_JSON_KEYVALUE_STRING("icc_filename", pal->color_space.icc_filename, 1);
         }
 
-        PAL__APPEND_JSON_KEYVALUE_STRING("is_linear", (pal->color_space.is_linear ? "true" : "false"), 0);
+        PAL__APPEND_TABS(tab);
+        PAL__APPEND("\"is_linear\": ");
+        if (pal->color_space.is_linear)
+            PAL__APPEND("true\n");
+        else
+            PAL__APPEND("false\n");
         tab--;
         PAL__APPEND(PAL__3TAB "},\n\n");  // color_space
         

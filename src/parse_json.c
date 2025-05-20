@@ -1,4 +1,4 @@
-/* palettetool Copyright (C) 2024 Frogtoss Games, Inc. */
+/* palettetool Copyright (C) 2024, 2025 Frogtoss Games, Inc. */
 
 /*
   This palette JSON parsing code is purposely written in a separate c
@@ -123,8 +123,7 @@ json_skip(const json_context_t* ctx, int* i)
 {
     for (int char_end = ctx->tok[*i].end;
          *i < ctx->num_tokens && ctx->tok[*i].start < char_end;
-         (*i)++)
-        ;  // pass
+         (*i)++);  // pass
 }
 
 
@@ -345,6 +344,55 @@ parse_palette_source_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
             return 1;
 
         JSON_RETURN_IF_UNMATCHED_TOKEN;
+    }
+
+    // on success, index into last element of subobject
+    (*i)--;
+
+    return 0;
+}
+
+static int
+parse_color_space_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
+{
+    int obj_end_index = ctx->tok[*i].end;
+
+    json_match(ctx, JSMN_OBJECT, i);  // skip into object's first token
+
+    for (; !JSON_EOF && ctx->tok[*i].start < obj_end_index; (*i)++) {
+        const int iter_start = *i;
+
+        if (*i == iter_start &&
+            json_write_value_str_on_match_key(
+                ctx, "name", i, pal->color_space.name, PAL_MAX_STRLEN) != 0)
+            return 1;
+
+        if (*i == iter_start &&
+            json_write_value_str_on_match_key(
+                ctx, "icc_filename", i, pal->color_space.icc_filename, PAL_MAX_STRLEN) != 0)
+            return 1;
+
+        if (*i == iter_start && jsoneq(ctx, *i, "is_linear") == 0) {
+            json_skip(ctx, i);
+
+            if (json_expect(ctx, JSMN_PRIMITIVE, *i) != 0) {
+                json_error(ctx, "expected boolean (primitive) type", *i);
+                return 1;
+            }
+
+            // only boolean in this whole parse
+            int len = ctx->tok[*i].end - ctx->tok[*i].start;
+
+            if (len == 4 && strncmp(ctx->str + ctx->tok[*i].start, "true", 4) == 0) {
+                pal->color_space.is_linear = 1;
+            } else if (len == 5 &&
+                       strncmp(ctx->str + ctx->tok[*i].start, "false", 5) == 0) {
+                pal->color_space.is_linear = 0;
+            } else {
+                json_error(ctx, "failed to parse is_linear as a boolean", *i);
+                return 1;
+            }
+        }
     }
 
     // on success, index into last element of subobject
@@ -689,6 +737,14 @@ parse_palette_object(json_context_t* ctx, int* i, pal_palette_t* pal)
                 return 1;
         }
 
+        if (*i == iter_start && jsoneq(ctx, *i, "color_space") == 0) {
+            json_skip(ctx, i);
+            if (json_expect(ctx, JSMN_OBJECT, *i) != 0)
+                return 1;
+
+            if (parse_color_space_subobject(ctx, i, pal) != 0)
+                return 1;
+        }
 
         if (*i == iter_start && jsoneq(ctx, *i, "colors") == 0) {
             json_skip(ctx, i);
