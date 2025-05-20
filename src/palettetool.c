@@ -45,7 +45,7 @@ typedef enum {
 } file_kind_t;
 
 const file_kind_t SUPPORTED_INPUT_FORMATS[] = {
-    FILE_KIND_ACO, FILE_KIND_JSON_PALETTE, FILE_KIND_PNG, 0};
+    FILE_KIND_ACO, FILE_KIND_JSON_PALETTE, FILE_KIND_PNG, FILE_KIND_GIMP_GPL, 0};
 const file_kind_t SUPPORTED_OUTPUT_FORMATS[] = {
     FILE_KIND_JSON_PALETTE, FILE_KIND_PNG, FILE_KIND_GIMP_GPL, 0};
 
@@ -317,6 +317,10 @@ main(int argc, char* argv[])
         }
 
         FTG_FREE(png_bytes);
+    } break;
+
+    case FILE_KIND_GIMP_GPL: {
+        // todo: read in gimp gpl
     } break;
 
     default:

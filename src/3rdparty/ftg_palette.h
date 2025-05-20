@@ -206,6 +206,14 @@ int pal_parse_bytes(const unsigned char *bytes,
                     pal_palette_t *out_pal,
                     const char *data_url);
 
+// parse a GIMP .gpl palette file into a pal_palette_t
+//
+// if aco_source_url is NULL, no URL will be specified
+int pal_parse_gpl(const unsigned char*bytes,
+                  unsigned int len,
+                  pal_palette_t* out_pal,
+                  const char *gpl_source_url);
+
 // parse a hex color string into a pal_color_t
 // no '#' prefix, and accepts len as:
 // 3 hex chars for rgb   eg: ccc     (shorthand for cccccc)
@@ -1192,6 +1200,112 @@ int pal_parse_bytes(const unsigned char *bytes,
     
     return 0;
 }
+
+static int pal__is_base_10_digit(unsigned char c) {
+    return c >= '0' && c <= '9';
+}
+
+
+static int pal__is_space(unsigned char c) {
+    return c == ' ' || c == '\t';
+}
+
+static int pal__parse_base10_int(const unsigned char **pp, const unsigned char *end) {
+    int val = 0;
+    const unsigned char *p = *pp;
+    while (p < end && pal__is_space(*p)) ++p;
+    while (p < end && pal__is_base_10_digit(*p)) {
+        val = val * 10 + (*p - '0');
+        ++p;
+    }
+    *pp = p;
+    return val;
+}
+
+static void pal__parse_name(const unsigned char *p, const unsigned char *end, char *out) {
+    unsigned int i = 0;
+    while (p < end && *p != '\n' && *p != '\r' && i < PAL_MAX_STRLEN - 1) {
+        out[i++] = (char)*p++;
+    }
+    out[i] = 0;
+}
+
+PALDEF int pal_parse_gpl(const unsigned char *bytes,
+                  unsigned int len,
+                  pal_palette_t* out_pal,
+                  const char *gpl_source_url)
+{
+    const unsigned char *p = bytes;
+    const unsigned char *end = bytes + len;
+
+    const char MAGIC[] = "GIMP Palette\n";
+
+    // validate magic
+    for (unsigned int i = 0; i < sizeof(MAGIC) - 1; ++i) {
+        if (p >= end || *p != (unsigned char)MAGIC[i])
+            return 1;
+        ++p;
+    }
+
+    int version = 1;
+    out_pal->num_colors = 0;
+
+    // Parse optional version 2 headers
+    while (p < end) {
+        // Skip CRs
+        while (p < end && (*p == '\r' || *p == '\n')) ++p;
+
+        // Check if it's a color line (starts with a digit)
+        if (p < end && pal__is_base_10_digit(*p)) break;
+
+        // Check for "Name:" or "Columns:"
+        if ((end - p >= 5) && p[0] == 'N' && p[1] == 'a' && p[2] == 'm' && p[3] == 'e' && p[4] == ':') {
+            version = 2;
+        }
+
+        // Skip to next line
+        while (p < end && *p != '\n') ++p;
+        if (p < end && *p == '\n') ++p;
+    }
+
+    // parse color lines
+    while (p < end && out_pal->num_colors < PAL_MAX_COLORS) {
+        // Skip leading whitespace
+        while (p < end && (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n')) ++p;
+        if (p >= end || *p == '#') { // Comment
+            while (p < end && *p != '\n') ++p;
+            continue;
+        }
+
+        int r = pal__parse_base10_int(&p, end);
+        int g = pal__parse_base10_int(&p, end);
+        int b = pal__parse_base10_int(&p, end);
+
+        pal_str_t *col_name = &out_pal->color_names[out_pal->num_colors];
+        pal_color_t *col = &out_pal->colors[out_pal->num_colors];
+
+        out_pal->num_colors++;
+
+        // todo: handle int not fitting
+        col->rgba.r = (uint8_t)r;
+        col->rgba.g = (uint8_t)g;
+        col->rgba.b = (uint8_t)b;
+        col->rgba.a = 1.0f;
+
+        // Parse optional name
+        while (p < end && pal__is_space(*p)) ++p;
+        pal__parse_name(p, end, *col_name);
+
+        // Skip to next line
+        while (p < end && *p != '\n') ++p;
+        if (p < end && *p == '\n') ++p;
+    }
+
+    // todo: do something with version = 2?
+
+    return 0;
+}
+
 
 PALDEF pal_u8_t
 pal_convert_channel_to_8bit(float val)

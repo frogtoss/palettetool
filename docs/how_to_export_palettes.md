@@ -60,3 +60,14 @@ Example command:
 
     palettetool --in some-palette.gpl --out some-palette.json
     
+# Programs That Don't Work With PaletteTool  #
+
+This section lists programs that don't export to palettetool, as of this writing.  Added here to save you some time.
+
+## Affinity Photo ##
+
+Affinity Photo only exports `.afpalette`, which is [not an open format](https://forum.affinity.serif.com/index.php?/topic/88691-afpalette-format-various-issues/) and is subject to change and break.
+
+## Krita ##
+
+Krita exports [KPL files](https://docs.krita.org/en/general_concepts/file_formats/file_kpl.html) which are not yet supported. 
