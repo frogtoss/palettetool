@@ -290,6 +290,25 @@ int pal_create_sorted_gradient(pal_palette_t*           pal,
                                pal_color_compare_func_t cb,
                                void*                    datum);
 
+
+// in-place convert a color from sRGB to linear.
+// 
+// No checks are performed to validate the color is in sRGB before performing the operation
+// If the alpha is premultiplied, it needs to be un-premultiplied before calling this function
+// Only the RGB channels are affected
+PALDEF void pal_color_srgb_to_linear(pal_color_t *color);
+
+// in-place convert a color from "linear sRGB" to sRGB.  If a channel is
+// out of the range 0-1, the channel is clamped. No tone mapping occurs.
+PALDEF void pal_color_linear_to_srgb(pal_color_t *color);
+
+// in-place converts a palette from "linear srgb" to srgb, calling
+// pal_color_linear_to_srgb on every color.
+//
+// if the input palette isn't in "linear srgb", no action is performed.
+// this does not take into account any .icc file
+PALDEF void pal_palette_linear_to_srgb(pal_palette_t *pal);
+
 /* callbacks for pal_create_sorted_gradient */
 float pal_red_cb(pal_color_t col0, pal_color_t col1, void* datum);
 float pal_green_cb(pal_color_t col0, pal_color_t col1, void* datum);
@@ -304,7 +323,7 @@ float pal_lightness_cb(pal_color_t col0, pal_color_t col1, void* datum);
 //
 #endif /* PAL__INCLUDE_PALETTE_H */
 
-/* implemetnation */
+/* implementation */
 #if defined(FTG_IMPLEMENT_PALETTE)
 
 #define PAL__UNUSED(x) ((void)x)
@@ -314,9 +333,31 @@ float pal_lightness_cb(pal_color_t col0, pal_color_t col1, void* datum);
 #    define PAL_TIME(n) time(n)
 #endif
 
+#ifndef PAL_POWF
+#    include "math.h"
+#    define PAL_POWF(n, m) powf((n), (m))
+#endif
+
 #define COLOR_SPACE_SRGB "sRGB"
 #define COLOR_SPACE_LINEAR_SRGB "linear-sRGB"
 #define ICC_SRGB "sRGB IEC61966-2.1.icc"
+
+static int
+pal__strncpy(char* dst, const char* src, int max_copy);
+
+static void
+pal__palette_set_srgb(pal_palette_t *pal) {
+    pal__strncpy(pal->color_space.name, COLOR_SPACE_SRGB, PAL_MAX_STRLEN);
+    pal__strncpy(pal->color_space.icc_filename, ICC_SRGB, PAL_MAX_STRLEN);
+    pal->color_space.is_linear = false;
+}
+
+static void
+pal__palette_set_linear(pal_palette_t *pal) {
+    pal__strncpy(pal->color_space.name, COLOR_SPACE_LINEAR_SRGB, PAL_MAX_STRLEN);
+    pal->color_space.icc_filename[0] = 0; /* linear color space doesn't have a common icc file */
+    pal->color_space.is_linear = true;
+}
 
 static int
 pal__append_buf(char** out_buf, int* out_buf_remaining, const char* str)
@@ -943,13 +984,48 @@ pal__get_rgb(float h, float s, float v, float* r, float* g, float* b)
 }
 
 static pal_u8_t
-pal__clamp8(int in, int clamp_min, int clamp_max)
+pal__clamp8(int val, int clamp_min, int clamp_max)
 {
-    if (in < clamp_min)
+    if (val < clamp_min)
         return clamp_min;
-    if (in > clamp_max)
+    if (val > clamp_max)
         return clamp_max;
-    return in;
+    return val;
+}
+
+static float inline
+pal__clampf32(float val, float min,  float max) {
+    return val < min ? min : (val > max ? max : val);
+}
+
+static float inline
+pal__srgb_to_linear(float c) {
+    return (c <= 0x04045f)
+           ? c / 12.92f
+           : PAL_POWF((c + 0.055f) / 1.055f, 2.4f);
+}
+
+static float inline
+pal__linear_to_srgb(float c) {
+    float out =  (c <= 0.0031308f)
+           ? 12.92f * c
+                 : 1.055f * PAL_POWF(c, 1.0f / 2.4f) - 0.055f;
+
+    return pal__clampf32(out, 0.0f, 1.0f);
+}
+
+PALDEF void
+pal_color_srgb_to_linear(pal_color_t *color) {
+    color->rgba.r = pal__srgb_to_linear(color->rgba.r);
+    color->rgba.g = pal__srgb_to_linear(color->rgba.g);
+    color->rgba.b = pal__srgb_to_linear(color->rgba.b);
+}
+
+PALDEF void
+pal_color_linear_to_srgb(pal_color_t *color)  {
+    color->rgba.r = pal__linear_to_srgb(color->rgba.r);
+    color->rgba.g = pal__linear_to_srgb(color->rgba.g);
+    color->rgba.b = pal__linear_to_srgb(color->rgba.b);
 }
 
 static float
@@ -1255,11 +1331,41 @@ int pal_parse_bytes(const unsigned char *bytes,
     out_pal->num_gradients = 0;
     out_pal->num_dither_pairs = 0;
     for (i = 0; i < PAL_MAX_COLORS; i++) out_pal->num_hints[i] = 0;
-    pal__strncpy(out_pal->color_space.name, COLOR_SPACE_LINEAR_SRGB, PAL_MAX_STRLEN);
-    out_pal->color_space.icc_filename[0] = 0;
-    out_pal->color_space.is_linear = true;
+    pal__palette_set_linear(out_pal);
     
     return 0;
+}
+
+PALDEF void pal_palette_linear_to_srgb(pal_palette_t *pal)
+{
+    // this function is really basic by design, and does not do
+    // anything if the palette is not explicitly linear by string
+    // compare on name
+    if (!pal__strmatch(COLOR_SPACE_LINEAR_SRGB, sizeof(COLOR_SPACE_LINEAR_SRGB),
+                       pal->color_space.name, pal__strlen(pal->color_space.name)))
+        return;
+    
+    for (int i = 0; i < pal->num_colors; i++) {
+        pal_color_t *color = &pal->colors[i];
+        pal_color_linear_to_srgb(color);
+    }
+
+    pal__palette_set_srgb(pal);
+}
+
+PALDEF void pal_palette_srgb_to_linear(pal_palette_t *pal) {
+    
+    if (!pal__strmatch(COLOR_SPACE_SRGB, sizeof(COLOR_SPACE_SRGB),
+                       pal->color_space.name, pal__strlen(pal->color_space.name)))
+        return;
+
+    for (int i = 0; i < pal->num_colors; i++) {
+        pal_color_t *color = &pal->colors[i];
+        pal_color_srgb_to_linear(color);
+    }
+
+
+    pal__palette_set_linear(pal);
 }
 
 static int pal__is_base_10_digit(char c) {
@@ -1323,9 +1429,7 @@ PALDEF int pal_parse_gpl(const unsigned char *bytes,
     out_pal->num_gradients = 0;
     out_pal->num_dither_pairs = 0;
     for (int i = 0; i < PAL_MAX_COLORS; i++) out_pal->num_hints[i] = 0;
-    pal__strncpy(out_pal->color_space.name, COLOR_SPACE_SRGB, PAL_MAX_STRLEN);
-    pal__strncpy(out_pal->color_space.icc_filename, ICC_SRGB, PAL_MAX_STRLEN);
-    out_pal->color_space.is_linear = false;
+    pal__palette_set_srgb(out_pal);
     
     pal__strncpy(
         out_pal->source.conversion_tool,
