@@ -43,7 +43,7 @@
 // <basic usage here>
 
 #ifdef _MSC_VER
-#pragma warning(disable: 4201)
+#    pragma warning(disable : 4201)
 #endif
 
 #ifdef PAL_PALETTE_STATIC
@@ -70,7 +70,7 @@
 
 
 #ifdef __cplusplus
-#    extern "C"
+extern "C"
 #endif
 
 #define PAL_MAX_COLORS 255
@@ -80,7 +80,7 @@
 #define PAL_MAX_GRADIENTS 32
 #define PAL_MAX_DITHER_PAIRS (PAL_MAX_COLORS * 2)
 
-typedef char           pal_str_t[PAL_MAX_STRLEN];
+    typedef char       pal_str_t[PAL_MAX_STRLEN];
 typedef unsigned char  pal_u8_t;
 typedef unsigned short pal_u16_t;
 typedef unsigned int   pal_u32_t;
@@ -160,12 +160,12 @@ typedef struct {
 typedef struct {
     pal_str_t name;
     pal_str_t icc_filename;
-    int is_linear;
+    int       is_linear;
 } pal_color_space_t;
 
 typedef struct pal_palette_s {
-    pal_str_t      title;
-    pal_source_t   source;
+    pal_str_t    title;
+    pal_source_t source;
 
     pal_color_space_t color_space;
 
@@ -197,7 +197,7 @@ pal_u8_t pal_convert_channel_to_8bit(float val);
 float pal_convert_channel_to_f32(pal_u8_t val);
 
 // parse an adobe aco file into a pal_palette_t
-// 
+//
 // if aco_source_url is NULL, no URL will be specified
 //
 // assign the color space sRGB to the colors, but perform
@@ -206,7 +206,7 @@ int pal_parse_aco(const unsigned char* bytes,
                   unsigned int         len,
                   pal_palette_t*       out_pal,
                   const char*          aco_source_url);
-                  
+
 
 // parse bytes representing 8-bit channels into a pal_palette_t
 // useful for parsing, say, an image loaded from stb_image.
@@ -215,22 +215,22 @@ int pal_parse_aco(const unsigned char* bytes,
 // bytes is assumed to be rgb or rgba
 //
 // assign
-int pal_parse_bytes(const unsigned char *bytes,
-                    unsigned int len,
-                    int num_channels,
-                    pal_palette_t *out_pal,
-                    const char *data_url);
+int pal_parse_bytes(const unsigned char* bytes,
+                    unsigned int         len,
+                    int                  num_channels,
+                    pal_palette_t*       out_pal,
+                    const char*          data_url);
 
 // parse a GIMP .gpl palette file into a pal_palette_t
-// 
+//
 // if aco_source_url is NULL, no URL will be specified
 //
 // assign the color space sRGB to the colors, but perform
 // no data conversion
-int pal_parse_gpl(const unsigned char*bytes,
-                  unsigned int len,
-                  pal_palette_t* out_pal,
-                  const char *gpl_source_url);
+int pal_parse_gpl(const unsigned char* bytes,
+                  unsigned int         len,
+                  pal_palette_t*       out_pal,
+                  const char*          gpl_source_url);
 
 // parse a hex color string into a pal_color_t
 // no '#' prefix, and accepts len as:
@@ -242,13 +242,13 @@ int pal_parse_gpl(const unsigned char*bytes,
 // hex_str does not need to be null terminated
 // case insensitive
 // assumes opaque (full alpha) if alpha nonspecified
-int pal_parse_hexcolor(const char *hex_str, int len, pal_color_t *out_color);
+int pal_parse_hexcolor(const char* hex_str, int len, pal_color_t* out_color);
 
 // output a hex color for a given pal_color_t
 // output is not prefixed with '#', outputs lowercase hex values
 // and includes alpha and adds a null terminator.
 // eg: 'ff00a0ff'
-void pal_color_to_hex(const pal_color_t *color, char out_str[9]);
+void pal_color_to_hex(const pal_color_t* color, char out_str[9]);
 
 // allows a quick 32-bit integer comparison to test for color
 // equivalency between palettes
@@ -272,7 +272,7 @@ int pal_hint_for_string(const char* str, int len, pal_hint_kind_t* out_hint);
 int pal_emit_palette_json(const pal_palette_t* pals, int num_pals, char* out_buf, int out_buf_len);
 
 // emit a gimp gpl palette file
-int pal_emit_gimp_gpl(const pal_palette_t *pal, char* out_buf, int out_buf_len);
+int pal_emit_gimp_gpl(const pal_palette_t* pal, char* out_buf, int out_buf_len);
 
 // add a new gradient to *pal that contains every color in
 // the palette, sorted by some criteria.
@@ -292,22 +292,22 @@ int pal_create_sorted_gradient(pal_palette_t*           pal,
 
 
 // in-place convert a color from sRGB to linear.
-// 
-// No checks are performed to validate the color is in sRGB before performing the operation
-// If the alpha is premultiplied, it needs to be un-premultiplied before calling this function
-// Only the RGB channels are affected
-PALDEF void pal_color_srgb_to_linear(pal_color_t *color);
+//
+// No checks are performed to validate the color is in sRGB before performing
+// the operation If the alpha is premultiplied, it needs to be un-premultiplied
+// before calling this function Only the RGB channels are affected
+PALDEF void pal_color_srgb_to_linear(pal_color_t* color);
 
 // in-place convert a color from "linear sRGB" to sRGB.  If a channel is
 // out of the range 0-1, the channel is clamped. No tone mapping occurs.
-PALDEF void pal_color_linear_to_srgb(pal_color_t *color);
+PALDEF void pal_color_linear_to_srgb(pal_color_t* color);
 
 // in-place converts a palette from "linear srgb" to srgb, calling
 // pal_color_linear_to_srgb on every color.
 //
 // if the input palette isn't in "linear srgb", no action is performed.
 // this does not take into account any .icc file
-PALDEF void pal_palette_linear_to_srgb(pal_palette_t *pal);
+PALDEF void pal_palette_linear_to_srgb(pal_palette_t* pal);
 
 /* callbacks for pal_create_sorted_gradient */
 float pal_red_cb(pal_color_t col0, pal_color_t col1, void* datum);
@@ -342,20 +342,22 @@ float pal_lightness_cb(pal_color_t col0, pal_color_t col1, void* datum);
 #define COLOR_SPACE_LINEAR_SRGB "linear-sRGB"
 #define ICC_SRGB "sRGB IEC61966-2.1.icc"
 
-static int
-pal__strncpy(char* dst, const char* src, int max_copy);
+static int pal__strncpy(char* dst, const char* src, int max_copy);
 
 static void
-pal__palette_set_srgb(pal_palette_t *pal) {
+pal__palette_set_srgb(pal_palette_t* pal)
+{
     pal__strncpy(pal->color_space.name, COLOR_SPACE_SRGB, PAL_MAX_STRLEN);
     pal__strncpy(pal->color_space.icc_filename, ICC_SRGB, PAL_MAX_STRLEN);
     pal->color_space.is_linear = false;
 }
 
 static void
-pal__palette_set_linear(pal_palette_t *pal) {
+pal__palette_set_linear(pal_palette_t* pal)
+{
     pal__strncpy(pal->color_space.name, COLOR_SPACE_LINEAR_SRGB, PAL_MAX_STRLEN);
-    pal->color_space.icc_filename[0] = 0; /* linear color space doesn't have a common icc file */
+    pal->color_space.icc_filename[0] =
+        0; /* linear color space doesn't have a common icc file */
     pal->color_space.is_linear = true;
 }
 
@@ -408,11 +410,11 @@ pal__int_to_str(unsigned long long val, char* buf, int len, int base)
 
         if (digit < 10)
             *p_buf-- = '0' + (char)digit;
-        else 
+        else
             *p_buf-- = 'a' + (char)(digit - 10);
     } while (val && p_buf >= buf);
 
-    return p_buf+1;
+    return p_buf + 1;
 }
 
 static int
@@ -566,7 +568,8 @@ pal_emit_palette_json(const pal_palette_t* pals, int num_pals, char* out_buf, in
                 "conversion_tool", pal->source.conversion_tool, 1);
         }
 
-        p_num_buf = pal__int_to_str(pal->source.conversion_timestamp, num_buf, 64, 10);
+        p_num_buf =
+            pal__int_to_str(pal->source.conversion_timestamp, num_buf, 64, 10);
         PAL__APPEND_JSON_KEYVALUE_STRING("conversion_date", p_num_buf, 0);
         tab--;
         PAL__APPEND(PAL__3TAB "},\n\n");  // source
@@ -582,7 +585,8 @@ pal_emit_palette_json(const pal_palette_t* pals, int num_pals, char* out_buf, in
         }
 
         if (pal->color_space.icc_filename[0]) {
-            PAL__APPEND_JSON_KEYVALUE_STRING("icc_filename", pal->color_space.icc_filename, 1);
+            PAL__APPEND_JSON_KEYVALUE_STRING(
+                "icc_filename", pal->color_space.icc_filename, 1);
         }
 
         PAL__APPEND_TABS(tab);
@@ -593,8 +597,8 @@ pal_emit_palette_json(const pal_palette_t* pals, int num_pals, char* out_buf, in
             PAL__APPEND("false\n");
         tab--;
         PAL__APPEND(PAL__3TAB "},\n\n");  // color_space
-        
-        
+
+
         //
         // colors block
         //
@@ -792,9 +796,11 @@ pal_emit_palette_json(const pal_palette_t* pals, int num_pals, char* out_buf, in
 }
 
 PALDEF int
-pal_emit_gimp_gpl(const pal_palette_t *pal, char *out_buf, int out_buf_len) {
+pal_emit_gimp_gpl(const pal_palette_t* pal, char* out_buf, int out_buf_len)
+{
     int out_buf_remaining = out_buf_len;
     int result = 0;
+    int i;
 
     PAL__APPEND("GIMP Palette\n");
     PAL__APPEND("Name: ");
@@ -804,17 +810,18 @@ pal_emit_gimp_gpl(const pal_palette_t *pal, char *out_buf, int out_buf_len) {
         PAL__APPEND("(untitled)");
     PAL__APPEND("\n");
 
-    
+
     PAL__APPEND("# generated by ftg_palette.h\n");
 
-    // for each color    
-    for (int i = 0; i < pal->num_colors; i++) {
-
+    // for each color
+    for (i = 0; i < pal->num_colors; i++) {
         // for each channel (no alpha)
-        for (int j = 0; j < 3; j++) {
-            char num_buf[64];
-            char *p_num_buf;
-            
+        int j;
+
+        for (j = 0; j < 3; j++) {
+            char  num_buf[64];
+            char* p_num_buf;
+
             pal_u8_t chan8 = pal_convert_channel_to_8bit(pal->colors[i].c[j]);
             p_num_buf = pal__int_to_str(chan8, num_buf, 64, 10);
             PAL__APPEND(p_num_buf);
@@ -993,36 +1000,35 @@ pal__clamp8(int val, int clamp_min, int clamp_max)
     return val;
 }
 
-static float inline
-pal__clampf32(float val, float min,  float max) {
+static float inline pal__clampf32(float val, float min, float max)
+{
     return val < min ? min : (val > max ? max : val);
 }
 
-static float inline
-pal__srgb_to_linear(float c) {
-    return (c <= 0x04045f)
-           ? c / 12.92f
-           : PAL_POWF((c + 0.055f) / 1.055f, 2.4f);
+static float inline pal__srgb_to_linear(float c)
+{
+    return (c <= 0.04045f) ? c / 12.92f : PAL_POWF((c + 0.055f) / 1.055f, 2.4f);
 }
 
-static float inline
-pal__linear_to_srgb(float c) {
-    float out =  (c <= 0.0031308f)
-           ? 12.92f * c
-                 : 1.055f * PAL_POWF(c, 1.0f / 2.4f) - 0.055f;
+static float inline pal__linear_to_srgb(float c)
+{
+    float out = (c <= 0.0031308f) ? 12.92f * c
+                                  : 1.055f * PAL_POWF(c, 1.0f / 2.4f) - 0.055f;
 
     return pal__clampf32(out, 0.0f, 1.0f);
 }
 
 PALDEF void
-pal_color_srgb_to_linear(pal_color_t *color) {
+pal_color_srgb_to_linear(pal_color_t* color)
+{
     color->rgba.r = pal__srgb_to_linear(color->rgba.r);
     color->rgba.g = pal__srgb_to_linear(color->rgba.g);
     color->rgba.b = pal__srgb_to_linear(color->rgba.b);
 }
 
 PALDEF void
-pal_color_linear_to_srgb(pal_color_t *color)  {
+pal_color_linear_to_srgb(pal_color_t* color)
+{
     color->rgba.r = pal__linear_to_srgb(color->rgba.r);
     color->rgba.g = pal__linear_to_srgb(color->rgba.g);
     color->rgba.b = pal__linear_to_srgb(color->rgba.b);
@@ -1153,7 +1159,7 @@ pal_parse_aco(const unsigned char* bytes,
         PAL__ASSERT(!"aco file version must be 1 or 2");
         return 1;
     }
-    
+
     out_pal->num_colors = pal__read_beu16(&p_bytes);
     if (PAL__AT_END_OF_DATA) {
         PAL__ASSERT(!"end of bytes after header");
@@ -1240,7 +1246,7 @@ pal_parse_aco(const unsigned char* bytes,
         if (version == 2) {
             aco_color.zero = pal__read_beu16(&p_bytes);
             aco_color.string_len = pal__read_beu16(&p_bytes);
-            
+
             // confirm enough bytes for string
             if (PAL__DOES_NOT_HAVE_BYTES(aco_color.string_len)) {
                 PAL__ASSERT(!"end of bytes parsing color's string name");
@@ -1275,11 +1281,12 @@ pal_parse_aco(const unsigned char* bytes,
 #undef PAL__DOES_NOT_HAVE_BYTES
 
 
-int pal_parse_bytes(const unsigned char *bytes,
-                    unsigned int len,
-                    int num_channels,
-                    pal_palette_t *out_pal,
-                    const char *data_url)
+int
+pal_parse_bytes(const unsigned char* bytes,
+                unsigned int         len,
+                int                  num_channels,
+                pal_palette_t*       out_pal,
+                const char*          data_url)
 {
     if (num_channels != 3 && num_channels != 4) {
         PAL__ASSERT(!"num_channels must be 3 or 4");
@@ -1304,14 +1311,16 @@ int pal_parse_bytes(const unsigned char *bytes,
         "ftg_palette.h - https://github.com/frogtoss/ftg_toolbox_public",
         PAL_MAX_STRLEN);
     out_pal->source.conversion_timestamp = PAL_TIME(NULL);
-    
+
     // one slow loop to rule them all
-    pal_u16_t i = 0;
-    for (const pal_u8_t *p = bytes; p < bytes + len; p += num_channels, i++) {
+    pal_u16_t       i = 0;
+    const pal_u8_t* p;
+    for (p = bytes; p < bytes + len; p += num_channels, i++) {
         out_pal->colors[i].rgba.r = pal_convert_channel_to_f32(p[0]);
         out_pal->colors[i].rgba.g = pal_convert_channel_to_f32(p[1]);
         out_pal->colors[i].rgba.b = pal_convert_channel_to_f32(p[2]);
-        out_pal->colors[i].rgba.a = num_channels == 4 ? pal_convert_channel_to_f32(p[3]) : 1.0f;
+        out_pal->colors[i].rgba.a =
+            num_channels == 4 ? pal_convert_channel_to_f32(p[3]) : 1.0f;
     }
     out_pal->num_colors = i;
 
@@ -1319,11 +1328,13 @@ int pal_parse_bytes(const unsigned char *bytes,
     for (i = 0; i < out_pal->num_colors; i++) {
         char num_buf[64];
 
-        char *p_num_buf = pal__int_to_str(i, num_buf, 64, 10);
-        int num_len = pal__strlen(p_num_buf);
-        
+        char* p_num_buf = pal__int_to_str(i, num_buf, 64, 10);
+        int   num_len = pal__strlen(p_num_buf);
+
         pal__strncpy(out_pal->color_names[i], p_num_buf, PAL_MAX_STRLEN);
-        pal__strncpy(out_pal->color_names[i] + num_len, " from bytes", PAL_MAX_STRLEN - num_len); 
+        pal__strncpy(out_pal->color_names[i] + num_len,
+                     " from bytes",
+                     PAL_MAX_STRLEN - num_len);
     }
 
     // fill out the remaining fields
@@ -1332,35 +1343,43 @@ int pal_parse_bytes(const unsigned char *bytes,
     out_pal->num_dither_pairs = 0;
     for (i = 0; i < PAL_MAX_COLORS; i++) out_pal->num_hints[i] = 0;
     pal__palette_set_linear(out_pal);
-    
+
     return 0;
 }
 
-PALDEF void pal_palette_linear_to_srgb(pal_palette_t *pal)
+PALDEF void
+pal_palette_linear_to_srgb(pal_palette_t* pal)
 {
     // this function is really basic by design, and does not do
     // anything if the palette is not explicitly linear by string
     // compare on name
-    if (!pal__strmatch(COLOR_SPACE_LINEAR_SRGB, sizeof(COLOR_SPACE_LINEAR_SRGB),
-                       pal->color_space.name, pal__strlen(pal->color_space.name)))
+    if (!pal__strmatch(COLOR_SPACE_LINEAR_SRGB,
+                       sizeof(COLOR_SPACE_LINEAR_SRGB),
+                       pal->color_space.name,
+                       pal__strlen(pal->color_space.name)))
         return;
-    
-    for (int i = 0; i < pal->num_colors; i++) {
-        pal_color_t *color = &pal->colors[i];
+
+    int i;
+    for (i = 0; i < pal->num_colors; i++) {
+        pal_color_t* color = &pal->colors[i];
         pal_color_linear_to_srgb(color);
     }
 
     pal__palette_set_srgb(pal);
 }
 
-PALDEF void pal_palette_srgb_to_linear(pal_palette_t *pal) {
-    
-    if (!pal__strmatch(COLOR_SPACE_SRGB, sizeof(COLOR_SPACE_SRGB),
-                       pal->color_space.name, pal__strlen(pal->color_space.name)))
+PALDEF void
+pal_palette_srgb_to_linear(pal_palette_t* pal)
+{
+    if (!pal__strmatch(COLOR_SPACE_SRGB,
+                       sizeof(COLOR_SPACE_SRGB),
+                       pal->color_space.name,
+                       pal__strlen(pal->color_space.name)))
         return;
 
-    for (int i = 0; i < pal->num_colors; i++) {
-        pal_color_t *color = &pal->colors[i];
+    int i;
+    for (i = 0; i < pal->num_colors; i++) {
+        pal_color_t* color = &pal->colors[i];
         pal_color_srgb_to_linear(color);
     }
 
@@ -1368,18 +1387,24 @@ PALDEF void pal_palette_srgb_to_linear(pal_palette_t *pal) {
     pal__palette_set_linear(pal);
 }
 
-static int pal__is_base_10_digit(char c) {
+static int
+pal__is_base_10_digit(char c)
+{
     return c >= '0' && c <= '9';
 }
 
 
-static int pal__is_space(char c) {
+static int
+pal__is_space(char c)
+{
     return c == ' ' || c == '\t';
 }
 
-static int pal__parse_base10_int(const char **pp, const char *end) {
-    int val = 0;
-    const char *p = *pp;
+static int
+pal__parse_base10_int(const char** pp, const char* end)
+{
+    int         val = 0;
+    const char* p = *pp;
     while (p < end && pal__is_space(*p)) ++p;
     while (p < end && pal__is_base_10_digit(*p)) {
         val = val * 10 + (*p - '0');
@@ -1389,11 +1414,13 @@ static int pal__parse_base10_int(const char **pp, const char *end) {
     return val;
 }
 
-static void pal__parse_name(const char *p, const char *end, char *out) {
+static void
+pal__parse_name(const char* p, const char* end, char* out)
+{
     unsigned int i = 0;
 
     while (p < end && (*p == ' ')) p++;
-    
+
     while (p < end && *p != '\n' && *p != '\r' && i < PAL_MAX_STRLEN - 1) {
         out[i++] = *p++;
     }
@@ -1401,36 +1428,44 @@ static void pal__parse_name(const char *p, const char *end, char *out) {
 }
 
 
-PALDEF int pal_parse_gpl(const unsigned char *bytes,
-                  unsigned int len,
-                  pal_palette_t* out_pal,
-                  const char *gpl_source_url)
+PALDEF int
+pal_parse_gpl(const unsigned char* bytes,
+              unsigned int         len,
+              pal_palette_t*       out_pal,
+              const char*          gpl_source_url)
 {
-    const char *p = (const char*)bytes;
-    const char *end = p + (len > 1 ? len - 1 : 0);
+    const char* p = (const char*)bytes;
+    const char* end = p + (len > 1 ? len - 1 : 0);
 
     const char MAGIC[] = "GIMP Palette\n";
 
     // validate magic
-    for (unsigned int i = 0; i < sizeof(MAGIC) - 1; ++i) {
-        if (p >= end || *p != (unsigned char)MAGIC[i]) {
-            PAL__ASSERT(!"\"GIMP Palette\" magic string not found");
-            return 1;
+    {
+        unsigned int i;
+        for (i = 0; i < sizeof(MAGIC) - 1; ++i) {
+            if (p >= end || *p != (unsigned char)MAGIC[i]) {
+                PAL__ASSERT(!"\"GIMP Palette\" magic string not found");
+                return 1;
+            }
+            ++p;
         }
-        ++p;
     }
 
     if (gpl_source_url != NULL) {
         pal__strncpy(out_pal->source.url, gpl_source_url, PAL_MAX_STRLEN);
     }
-    
+
     out_pal->num_colors = 0;
     out_pal->title[0] = 0;
     out_pal->num_gradients = 0;
     out_pal->num_dither_pairs = 0;
-    for (int i = 0; i < PAL_MAX_COLORS; i++) out_pal->num_hints[i] = 0;
+
+    {
+        int i;
+        for (i = 0; i < PAL_MAX_COLORS; i++) out_pal->num_hints[i] = 0;
+    }
     pal__palette_set_srgb(out_pal);
-    
+
     pal__strncpy(
         out_pal->source.conversion_tool,
         "ftg_palette.h - https://github.com/frogtoss/ftg_toolbox_public",
@@ -1439,11 +1474,11 @@ PALDEF int pal_parse_gpl(const unsigned char *bytes,
 
     // Detect version 2, scan ahead to colors
     while (p < end) {
-
         while (p < end && (*p == '\n' || *p == ' ' || *p == '\t')) ++p;
-        
+
         // Check if it's a color line (starts with a digit)
-        if (p < end && pal__is_base_10_digit(*p)) break;
+        if (p < end && pal__is_base_10_digit(*p))
+            break;
 
         // Existence of  "Name:" indicates version 2 palette
         if ((end - p >= 5) && pal__strmatch("Name:", 5, p, 5)) {
@@ -1453,14 +1488,15 @@ PALDEF int pal_parse_gpl(const unsigned char *bytes,
 
         // Skip to next line
         while (p < end && *p != '\n') ++p;
-        if (p < end && *p == '\n') ++p;
+        if (p < end && *p == '\n')
+            ++p;
     }
 
     // parse color lines
     while (p < end && out_pal->num_colors < PAL_MAX_COLORS) {
-
-        while (p < end && (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n')) ++p;
-        if (p >= end || *p == '#') { // Comment
+        while (p < end && (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n'))
+            ++p;
+        if (p >= end || *p == '#') {  // Comment
             while (p < end && *p != '\n') ++p;
             continue;
         }
@@ -1469,8 +1505,8 @@ PALDEF int pal_parse_gpl(const unsigned char *bytes,
         int g = pal__parse_base10_int(&p, end);
         int b = pal__parse_base10_int(&p, end);
 
-        pal_str_t *col_name = &out_pal->color_names[out_pal->num_colors];
-        pal_color_t *col = &out_pal->colors[out_pal->num_colors];
+        pal_str_t*   col_name = &out_pal->color_names[out_pal->num_colors];
+        pal_color_t* col = &out_pal->colors[out_pal->num_colors];
 
         out_pal->num_colors++;
 
@@ -1485,9 +1521,10 @@ PALDEF int pal_parse_gpl(const unsigned char *bytes,
 
         // Skip to next line
         while (p < end && *p != '\n') ++p;
-        if (p < end && *p == '\n') ++p;
+        if (p < end && *p == '\n')
+            ++p;
     }
-    
+
     return 0;
 }
 
@@ -1536,8 +1573,7 @@ const char* pal__enum_strings[HINT_MAX] = {
     "function",     "method",
     "preprocessor", "type",
     "constant",     "link",
-    "cursor"
-};
+    "cursor"};
 
 PALDEF const char*
 pal_string_for_hint(pal_hint_kind_t hint)
@@ -1742,12 +1778,13 @@ pal_init(pal_palette_t* pal)
     for (i = 0; i < PAL_MAX_HINTS; i++) pal->num_hints[i] = 0;
 }
 
-static int pal__scan_int(const char *str, int num_digits, pal_u16_t base, pal_u16_t *out_int) {
-    
-    const char *p = str;
-    pal_u16_t val = 0;
-    int i;
-    
+static int
+pal__scan_int(const char* str, int num_digits, pal_u16_t base, pal_u16_t* out_int)
+{
+    const char* p = str;
+    pal_u16_t   val = 0;
+    int         i;
+
     for (i = 0; i < num_digits; i++) {
         pal_u16_t digit;
 
@@ -1771,21 +1808,22 @@ static int pal__scan_int(const char *str, int num_digits, pal_u16_t base, pal_u1
 }
 
 int
-pal_parse_hexcolor(const char *hex_str, int len, pal_color_t *out_color) {
+pal_parse_hexcolor(const char* hex_str, int len, pal_color_t* out_color)
+{
     PAL__ASSERT(len == 3 || len == 4 || len == 6 || len == 8);
     PAL__ASSERT(hex_str[0] != '#');
 
 
     pal_color_t color;
-    pal_u16_t chan[4];
-    int result = 0;
+    pal_u16_t   chan[4];
+    int         result = 0;
 
     if (len == 3 || len == 4) {
         result |= pal__scan_int(&hex_str[0], 1, 16, &chan[0]);
         result |= pal__scan_int(&hex_str[1], 1, 16, &chan[1]);
         result |= pal__scan_int(&hex_str[2], 1, 16, &chan[2]);
         if (len == 4)
-            result |= pal__scan_int(&hex_str[3], 1, 16, &chan[3]);                    
+            result |= pal__scan_int(&hex_str[3], 1, 16, &chan[3]);
 
         if (result != 0)
             return 1;
@@ -1797,7 +1835,8 @@ pal_parse_hexcolor(const char *hex_str, int len, pal_color_t *out_color) {
         if (len == 3)
             color.c[3] = 1.0f;
         else
-            color.c[3] = pal_convert_channel_to_f32((pal_u8_t)(chan[3] << 4 | chan[3]));
+            color.c[3] =
+                pal_convert_channel_to_f32((pal_u8_t)(chan[3] << 4 | chan[3]));
 
         *out_color = color;
 
@@ -1809,13 +1848,13 @@ pal_parse_hexcolor(const char *hex_str, int len, pal_color_t *out_color) {
             result |= pal__scan_int(&hex_str[6], 2, 16, &chan[3]);
 
         if (result != 0)
-            return 1;   
+            return 1;
 
         color.c[0] = pal_convert_channel_to_f32((pal_u8_t)chan[0]);
         color.c[1] = pal_convert_channel_to_f32((pal_u8_t)chan[1]);
         color.c[2] = pal_convert_channel_to_f32((pal_u8_t)chan[2]);
 
-        if (len == 6)        
+        if (len == 6)
             color.c[3] = 1.0f;
         else
             color.c[3] = pal_convert_channel_to_f32((pal_u8_t)chan[3]);
@@ -1827,14 +1866,15 @@ pal_parse_hexcolor(const char *hex_str, int len, pal_color_t *out_color) {
 }
 
 void
-pal_color_to_hex(const pal_color_t *color, char out_str[9]) {
-    char buf[32];
-    char *p = out_str;
-    int i;
+pal_color_to_hex(const pal_color_t* color, char out_str[9])
+{
+    char  buf[32];
+    char* p = out_str;
+    int   i;
     for (i = 0; i < 4; i++) {
         pal_u8_t chan = pal_convert_channel_to_8bit(color->c[i]);
-        char *p_buf = pal__int_to_str(chan, buf, 32, 16);
-        
+        char*    p_buf = pal__int_to_str(chan, buf, 32, 16);
+
         if (p_buf[1] != 0) {
             *p++ = p_buf[0];
             *p++ = p_buf[1];
@@ -1874,13 +1914,59 @@ pal__test_teardown(void)
     return 0;
 }
 
+
 static int
-pal__test_basic(void)
+pal__float_almost_equal(float a, float b)
 {
-    /* basic test here */
+    const float EPSILON = 1e-4f;
+
+    float diff = fabsf(a - b);
+    if (diff <= EPSILON)
+        return 1;
+
+    float max_ab = fmaxf(fabsf(a), fabsf(b));
+    return diff <= max_ab * EPSILON;
+}
+
+static pal_color_t
+pal__test_color_zero(void)
+{
+    pal_color_t color;
+    memset(&color, 0, sizeof(color));
+
+    return color;
+}
+
+static int
+pal__test_roundtrip_srgb_to_linear_srgb(void)
+{
+    float test_values[] = {
+        0.0f, 0.0031308f, 0.04045f, 0.1f, 0.25f, 0.5f, 0.75f, 0.9f, 1.0f};
+
+    int num_values = sizeof(test_values) / sizeof(float);
+
+    int i;
+    for (i = 0; i < num_values; i++) {
+        pal_color_t original = pal__test_color_zero();
+        pal_color_t roundtrip = pal__test_color_zero();
+        pal_color_t linear = pal__test_color_zero();
+
+        // all color channels have the same conversion curve, so just
+        // test red channel
+        original.rgba.r = test_values[i];
+
+        linear = original;
+        pal_color_srgb_to_linear(&linear);
+
+        roundtrip = linear;
+        pal_color_linear_to_srgb(&roundtrip);
+
+        FTGT_ASSERT(pal__float_almost_equal(original.rgba.r, roundtrip.rgba.r));
+    }
 
     return ftgt_test_errorlevel();
 }
+
 
 PALDEF
 void
@@ -1888,7 +1974,7 @@ pal_decl_suite(void)
 {
     ftgt_suite_s* suite =
         ftgt_create_suite(NULL, "pal_core", pal__test_setup, pal__test_teardown);
-    FTGT_ADD_TEST(suite, pal__test_basic);
+    FTGT_ADD_TEST(suite, pal__test_roundtrip_srgb_to_linear_srgb);
 }
 
 #endif /* FTGT_TESTS_ENABLED */

@@ -295,3 +295,4 @@ __pycache__/
 # Debug files
 *.dSYM/
 *.su
+.DS_Store
