@@ -1,7 +1,37 @@
 /* ftg_palette  - public domain library
    no warranty implied; use at your own risk
 
-   <brief description here>
+   Color palette pipeline tools.  Contains a grab bag of functions
+   to manage colour between projects.
+
+   Central to this purpose, there is a new palette json format designed
+   for color palette interchange.  It supports denoting the color
+   space of the colors, represents colors in 32-bits per channel and
+   offers an alpha channel.  It also has additional fields indicating
+   relationships between colors, such as suggested gradients and hints
+   if they are to be applied to UI elements, enabling theme interchange
+   between programs.
+
+   If this is interesting to you but you do not want to actually write
+   code, there is a command line tool that uses ftg_palette:
+
+   https://github.com/frogtoss/palettetool
+
+   Some other features:
+
+    - convert between sRGB and "linear sRGB"
+    - read JSON into color interchange format
+    - read ACO, PNG and GPL formats
+
+   READING JSON PALETTES
+
+   While this header file does not contain a json palette writer,
+   it does not contain a reader.  If using C, a stack-based reader
+   can be ripped from here:
+
+   https://github.com/frogtoss/palettetool/blob/main/src/parse_json.c
+
+   Other languages are encouraged to write their own readers.
 
    USAGE
 
@@ -994,10 +1024,10 @@ static pal_u8_t
 pal__clamp8(int val, int clamp_min, int clamp_max)
 {
     if (val < clamp_min)
-        return clamp_min;
+        return (pal_u8_t)clamp_min;
     if (val > clamp_max)
-        return clamp_max;
-    return val;
+        return (pal_u8_t)clamp_max;
+    return (pal_u8_t)val;
 }
 
 static float inline pal__clampf32(float val, float min, float max)
