@@ -1030,17 +1030,20 @@ pal__clamp8(int val, int clamp_min, int clamp_max)
     return (pal_u8_t)val;
 }
 
-static float inline pal__clampf32(float val, float min, float max)
+inline static float
+pal__clampf32(float val, float min, float max)
 {
     return val < min ? min : (val > max ? max : val);
 }
 
-static float inline pal__srgb_to_linear(float c)
+inline static float
+pal__srgb_to_linear(float c)
 {
     return (c <= 0.04045f) ? c / 12.92f : PAL_POWF((c + 0.055f) / 1.055f, 2.4f);
 }
 
-static float inline pal__linear_to_srgb(float c)
+inline static float
+pal__linear_to_srgb(float c)
 {
     float out = (c <= 0.0031308f) ? 12.92f * c
                                   : 1.055f * PAL_POWF(c, 1.0f / 2.4f) - 0.055f;
@@ -1805,7 +1808,7 @@ pal_init(pal_palette_t* pal)
     pal->num_gradients = 0;
     pal->num_dither_pairs = 0;
 
-    for (i = 0; i < PAL_MAX_HINTS; i++) pal->num_hints[i] = 0;
+    for (i = 0; i < PAL_MAX_COLORS; i++) pal->num_hints[i] = 0;
 }
 
 static int
