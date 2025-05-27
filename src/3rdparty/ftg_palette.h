@@ -1834,6 +1834,7 @@ pal__scan_int(const char* str, int num_digits, pal_u16_t base, pal_u16_t* out_in
 
         PAL__ASSERT(digit < base);
         val = val * base + digit;
+        p++;
     }
 
     *out_int = val;
@@ -2000,6 +2001,41 @@ pal__test_roundtrip_srgb_to_linear_srgb(void)
     return ftgt_test_errorlevel();
 }
 
+static int
+pal__test_parse_hexcolor(void)
+{
+    pal_color_t color = pal__test_color_zero();
+    pal_parse_hexcolor("F00", 3, &color);
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.r, 1.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.g, 0.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.b, 0.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.a, 1.0f));
+
+    color = pal__test_color_zero();
+    pal_parse_hexcolor("0F00", 4, &color);
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.r, 0.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.g, 1.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.b, 0.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.a, 0.0f));
+
+    color = pal__test_color_zero();
+    pal_parse_hexcolor("0000FF", 6, &color);
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.r, 0.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.g, 0.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.b, 1.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.a, 1.0f));
+
+    color = pal__test_color_zero();
+    pal_parse_hexcolor("0000FF00", 8, &color);
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.r, 0.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.g, 0.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.b, 1.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.a, 0.0f));
+
+
+    return ftgt_test_errorlevel();
+}
+
 
 PALDEF
 void
@@ -2008,6 +2044,7 @@ pal_decl_suite(void)
     ftgt_suite_s* suite =
         ftgt_create_suite(NULL, "pal_core", pal__test_setup, pal__test_teardown);
     FTGT_ADD_TEST(suite, pal__test_roundtrip_srgb_to_linear_srgb);
+    FTGT_ADD_TEST(suite, pal__test_parse_hexcolor);
 }
 
 #endif /* FTGT_TESTS_ENABLED */
