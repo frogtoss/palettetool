@@ -772,8 +772,8 @@ pal_emit_palette_json(const pal_palette_t* pals, int num_pals, char* out_buf, in
             PAL__APPEND(pal->dither_pair_names[j]);
             PAL__APPEND("\": [");
 
-            if (pal->dither_pairs[j].index0 > pal->num_colors ||
-                pal->dither_pairs[j].index1 > pal->num_colors) {
+            if (pal->dither_pairs[j].index0 >= pal->num_colors ||
+                pal->dither_pairs[j].index1 >= pal->num_colors) {
                 PAL__ASSERT(!"dither pair index out of range");
                 return 2;
             }
