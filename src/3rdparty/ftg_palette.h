@@ -1829,6 +1829,7 @@ pal__scan_int(const char* str, int num_digits, pal_u16_t base, pal_u16_t* out_in
             digit = *p - 'a' + 10;
         else {
             PAL__ASSERT(!"invalid digit in hex string");
+            *out_int = 0;
             return 1;
         }
 
@@ -1858,6 +1859,8 @@ pal_parse_hexcolor(const char* hex_str, int len, pal_color_t* out_color)
         result |= pal__scan_int(&hex_str[2], 1, 16, &chan[2]);
         if (len == 4)
             result |= pal__scan_int(&hex_str[3], 1, 16, &chan[3]);
+        else
+            chan[3] = 0xFF;
 
         if (result != 0)
             return 1;
@@ -1880,6 +1883,8 @@ pal_parse_hexcolor(const char* hex_str, int len, pal_color_t* out_color)
         result |= pal__scan_int(&hex_str[4], 2, 16, &chan[2]);
         if (len == 8)
             result |= pal__scan_int(&hex_str[6], 2, 16, &chan[3]);
+        else
+            chan[3] = 0xFF;
 
         if (result != 0)
             return 1;
