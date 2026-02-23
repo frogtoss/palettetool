@@ -160,6 +160,21 @@ print_supported_kinds(void)
     }
 }
 
+// colors without a name have to have a name before exporting as json,
+// because gradients name colors by their name
+void
+name_empty_color_names(pal_palette_t* pal)
+{
+    for (int i = 0; i < pal->num_colors; i++) {
+        if (pal->color_names[i][0])
+            continue;
+
+        int trunc =
+            ftg_strncpy(pal->color_names[i], ftg_va("unnamed %d", i), PAL_MAX_COLORS);
+        FTG_UNUSED(trunc);
+    }
+}
+
 #define SORT_BASED_ON_NAME_IF_MATCH(n)                                              \
     if (ftg_stricmp(sort_kind, #n) == 0) {                                          \
         match_found = true;                                                         \
@@ -337,6 +352,8 @@ main(int argc, char* argv[])
     default:
         fatal("Unsupported input kind. --help lists supported kinds");
     }
+
+    name_empty_color_names(&palette);
 
     //
     // write file
