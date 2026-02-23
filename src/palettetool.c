@@ -29,6 +29,7 @@ struct args_s {
     bool        help_supported;
 
     const char* png_sort_kind;
+    int         png_scale;
 
     int json_palette_index;
 } args;
@@ -87,7 +88,7 @@ print_header(void)
 {
     printf("palettetool\n\ta command-line pipeline tool to convert between "
            "palette formats\n");
-    printf("Copyright (C) 2024-2025 Frogtoss Games, Inc.\n");
+    printf("Copyright (C) 2024-2026 Frogtoss Games, Inc.\n");
 }
 
 
@@ -230,6 +231,13 @@ main(int argc, char* argv[])
                    "blue, hue, saturation, value, lightness)",
                    false,
                    &args.png_sort_kind);
+    kgflags_int(
+        "png-scale",
+        1,
+        "scale of the output png image (used for both width and height)",
+        false,
+        &args.png_scale);
+
     kgflags_int("json-palette-index",
                 0,
                 "palette to parse in the json doc (starting from 0)",
@@ -249,6 +257,11 @@ main(int argc, char* argv[])
         print_header();
         print_supported_kinds();
         return 0;
+    }
+
+    // validate args
+    if (args.png_scale < 1 || args.png_scale > 128) {
+        fatal("png-scale must be in range 1-128");
     }
 
     print(LOG_MSG, ftg_va("converting '%s' to '%s'\n", args.in_file, args.out_file));
@@ -377,23 +390,33 @@ main(int argc, char* argv[])
 
     case FILE_KIND_PNG: {
         // create rgba color row from palette
-        u8* image_data = FTG_MALLOC(sizeof(u8), 4 * palette.num_colors);
+        int width = palette.num_colors * args.png_scale;
+        int height = args.png_scale;
+        int stride = width * 4;
+
+        u8* image_data = FTG_MALLOC(sizeof(u8), stride * height);
         u8* p = image_data;
 
         pal_gradient_t* gradient =
             get_export_gradient_from_sort_kind(&palette, args.png_sort_kind);
         FTG_ASSERT_ALWAYS(gradient->num_indices == palette.num_colors);
 
-        for (int i = 0; i < gradient->num_indices; i++) {
+        // do the first row and then just memcpy the rest
+        for (int x = 0; x < width; x++) {
+            int color_idx = x / args.png_scale;
             for (int j = 0; j < 4; j++) {
-                float chan32 = palette.colors[gradient->indices[i]].c[j];
-                u8    chan8 = pal_convert_channel_to_8bit(chan32);
+                float chan32 = palette.colors[gradient->indices[color_idx]].c[j];
+                u8 chan8 = pal_convert_channel_to_8bit(chan32);
                 *p++ = chan8;
             }
         }
 
-        int result = stbi_write_png(
-            args.out_file, palette.num_colors, 1, 4, image_data, palette.num_colors);
+        for (int y = 1; y < height; y++) {
+            memcpy(image_data + (stride * y), image_data, stride);
+        }
+
+        int result =
+            stbi_write_png(args.out_file, width, height, 4, image_data, stride);
         if (result == 0) {
             fatal(ftg_va("failed to write png file to '%s'", args.out_file));
         }
