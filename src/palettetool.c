@@ -137,6 +137,24 @@ add_full_palette_gradients(pal_palette_t* palette)
     result |= pal_create_sorted_gradient(
         palette, "sort by lightness", pal_lightness_cb, NULL);
 
+    result |=
+        pal_create_sorted_gradient(palette, "sort by redness", pal_redness_cb, NULL);
+
+    result |= pal_create_sorted_gradient(
+        palette, "sort by yellowness", pal_yellowness_cb, NULL);
+
+    result |= pal_create_sorted_gradient(
+        palette, "sort by greenness", pal_greenness_cb, NULL);
+
+    result |=
+        pal_create_sorted_gradient(palette, "sort by cyanness", pal_cyanness_cb, NULL);
+
+    result |=
+        pal_create_sorted_gradient(palette, "sort by blueness", pal_blueness_cb, NULL);
+
+    result |= pal_create_sorted_gradient(
+        palette, "sort by magentaness", pal_magentaness_cb, NULL);
+
     FTG_ASSERT(result == 0);
 
     return result;
@@ -207,6 +225,12 @@ get_export_gradient_from_sort_kind(pal_palette_t* pal, const char* sort_kind)
     SORT_BASED_ON_NAME_IF_MATCH(saturation);
     SORT_BASED_ON_NAME_IF_MATCH(value);
     SORT_BASED_ON_NAME_IF_MATCH(lightness);
+    SORT_BASED_ON_NAME_IF_MATCH(redness);
+    SORT_BASED_ON_NAME_IF_MATCH(yellowness);
+    SORT_BASED_ON_NAME_IF_MATCH(greenness);
+    SORT_BASED_ON_NAME_IF_MATCH(cyanness);
+    SORT_BASED_ON_NAME_IF_MATCH(blueness);
+    SORT_BASED_ON_NAME_IF_MATCH(magentaness);
     FTG_ASSERT(result == 0);
     FTG_UNUSED(result);
 
@@ -225,12 +249,14 @@ main(int argc, char* argv[])
     kgflags_string("in", NULL, "file to convert", true, &args.in_file);
     kgflags_string("out", NULL, "file to export to (will overwrite)", true, &args.out_file);
     kgflags_bool("verbose", false, "log verbosity", false, &args.verbose);
-    kgflags_string("sort-png",
-                   NULL,
-                   "when exporting as png, use a sort (supported: red, green, "
-                   "blue, hue, saturation, value, lightness)",
-                   false,
-                   &args.png_sort_kind);
+    kgflags_string(
+        "sort-png",
+        NULL,
+        "when exporting as png, use a sort\n\t\t(supported: red, green, "
+        "blue, hue, saturation, value, lightness, redness, "
+        "yellowness, greenness, cyanness, blueness, magentaness)",
+        false,
+        &args.png_sort_kind);
     kgflags_int(
         "png-scale",
         1,
