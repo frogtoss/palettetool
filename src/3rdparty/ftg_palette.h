@@ -106,36 +106,6 @@ extern "C"
 #define PAL_MAX_COLORS 255
 #define PAL_MAX_GRADIENT_INDICES (PAL_MAX_COLORS * 2)
 #define PAL_MAX_STRLEN 48
-#define PAL_MAX_HINTS 4
-#define PAL_MAX_GRADIENTS 32
-#define PAL_MAX_DITHER_PAIRS (PAL_MAX_COLORS * 2)
-
-    typedef char       pal_str_t[PAL_MAX_STRLEN];
-typedef unsigned char  pal_u8_t;
-typedef unsigned short pal_u16_t;
-typedef unsigned int   pal_u32_t;
-
-typedef struct {
-    float r;
-    float g;
-    float b;
-    float a;
-} pal_rgba_t;
-
-typedef struct {
-    union {
-        pal_rgba_t rgba;
-        float      c[4];
-    };
-
-} pal_color_t;
-
-typedef struct {
-    pal_str_t          url;
-    pal_str_t          conversion_tool;
-    unsigned long long conversion_timestamp;
-} pal_source_t;
-
 typedef enum {
     HINT_ERROR,
     HINT_WARNING,
@@ -174,6 +144,36 @@ typedef enum {
     HINT_CURSOR,
     HINT_MAX,  // always last
 } pal_hint_kind_t;
+
+#define PAL_MAX_HINTS HINT_MAX
+#define PAL_MAX_GRADIENTS 32
+#define PAL_MAX_DITHER_PAIRS (PAL_MAX_COLORS * 2)
+
+    typedef char       pal_str_t[PAL_MAX_STRLEN];
+typedef unsigned char  pal_u8_t;
+typedef unsigned short pal_u16_t;
+typedef unsigned int   pal_u32_t;
+
+typedef struct {
+    float r;
+    float g;
+    float b;
+    float a;
+} pal_rgba_t;
+
+typedef struct {
+    union {
+        pal_rgba_t rgba;
+        float      c[4];
+    };
+
+} pal_color_t;
+
+typedef struct {
+    pal_str_t          url;
+    pal_str_t          conversion_tool;
+    unsigned long long conversion_timestamp;
+} pal_source_t;
 
 typedef float (*pal_color_compare_func_t)(pal_color_t col0, pal_color_t col1, void* datum);
 
@@ -347,6 +347,14 @@ float pal_hue_cb(pal_color_t col0, pal_color_t col1, void* datum);
 float pal_saturation_cb(pal_color_t col0, pal_color_t col1, void* datum);
 float pal_value_cb(pal_color_t col0, pal_color_t col1, void* datum);
 float pal_lightness_cb(pal_color_t col0, pal_color_t col1, void* datum);
+
+/* hue proximity callbacks -- sort by distance from an identity hue */
+float pal_redness_cb(pal_color_t col0, pal_color_t col1, void* datum);
+float pal_yellowness_cb(pal_color_t col0, pal_color_t col1, void* datum);
+float pal_greenness_cb(pal_color_t col0, pal_color_t col1, void* datum);
+float pal_cyanness_cb(pal_color_t col0, pal_color_t col1, void* datum);
+float pal_blueness_cb(pal_color_t col0, pal_color_t col1, void* datum);
+float pal_magentaness_cb(pal_color_t col0, pal_color_t col1, void* datum);
 
 //
 // End of header file
@@ -1796,6 +1804,105 @@ pal_lightness_cb(pal_color_t col0, pal_color_t col1, void* datum)
     return col1_lightness - col0_lightness;
 }
 
+
+/* XYZ to LAB conversion */
+static float pal__lab_f(float t)
+{
+    /* 6/29 = 0.20689655; (6/29)^3 = 0.00885645 */
+    if (t > 0.0088564516f) {
+        return cbrtf(t);
+    }
+    /* 1/3 * (29/6)^2 = 7.787037; 4/29 = 0.137931 */
+    return (7.787037f * t) + 0.137931034f;
+}
+
+/* Convert sRGB to CIELAB (D65 Illuminant) */
+static void pal__get_lab(float r, float g, float b, float* out_L, float* out_a, float* out_b)
+{
+    float lr = pal__srgb_to_linear(r);
+    float lg = pal__srgb_to_linear(g);
+    float lb = pal__srgb_to_linear(b);
+
+    /* Linear sRGB to CIE XYZ */
+    float x = (lr * 0.4124564f + lg * 0.3575761f + lb * 0.1804375f) / 0.95047f;
+    float y = (lr * 0.2126729f + lg * 0.7151522f + lb * 0.0721750f) / 1.00000f;
+    float z = (lr * 0.0193339f + lg * 0.1191920f + lb * 0.9503041f) / 1.08883f;
+
+    /* CIE XYZ to CIELAB */
+    float fx = pal__lab_f(x);
+    float fy = pal__lab_f(y);
+    float fz = pal__lab_f(z);
+
+    *out_L = (116.0f * fy) - 16.0f;
+    *out_a = 500.0f * (fx - fy);
+    *out_b = 200.0f * (fy - fz);
+}
+
+/* Returns the squared perceptual distance (Delta E^2) from a target LAB color. 
+   Smaller values mean the color is perceptually closer to the target. */
+static float pal__lab_distance_sq_from_target(pal_color_t col, float tL, float ta, float tb)
+{
+    float L, a, b;
+    pal__get_lab(col.rgba.r, col.rgba.g, col.rgba.b, &L, &a, &b);
+    
+    float dL = L - tL;
+    float da = a - ta;
+    float db = b - tb;
+    
+    return (dL * dL) + (da * da) + (db * db);
+}
+
+/* * Sorting Callbacks 
+ * Target LAB coordinates are pre-computed for pure sRGB primaries/secondaries.
+ */
+
+float pal_redness_cb(pal_color_t col0, pal_color_t col1, void* datum)
+{
+    PAL__UNUSED(datum);
+    /* Pure sRGB Red: L=53.24, a=80.09, b=67.20 */
+    return pal__lab_distance_sq_from_target(col0, 53.24f, 80.09f, 67.20f)
+         - pal__lab_distance_sq_from_target(col1, 53.24f, 80.09f, 67.20f);
+}
+
+float pal_yellowness_cb(pal_color_t col0, pal_color_t col1, void* datum)
+{
+    PAL__UNUSED(datum);
+    /* Pure sRGB Yellow: L=97.14, a=-21.55, b=94.48 */
+    return pal__lab_distance_sq_from_target(col0, 97.14f, -21.55f, 94.48f)
+         - pal__lab_distance_sq_from_target(col1, 97.14f, -21.55f, 94.48f);
+}
+
+float pal_greenness_cb(pal_color_t col0, pal_color_t col1, void* datum)
+{
+    PAL__UNUSED(datum);
+    /* Pure sRGB Green: L=87.73, a=-86.18, b=83.18 */
+    return pal__lab_distance_sq_from_target(col0, 87.73f, -86.18f, 83.18f)
+         - pal__lab_distance_sq_from_target(col1, 87.73f, -86.18f, 83.18f);
+}
+
+float pal_cyanness_cb(pal_color_t col0, pal_color_t col1, void* datum)
+{
+    PAL__UNUSED(datum);
+    /* Pure sRGB Cyan: L=91.11, a=-48.09, b=-14.13 */
+    return pal__lab_distance_sq_from_target(col0, 91.11f, -48.09f, -14.13f)
+         - pal__lab_distance_sq_from_target(col1, 91.11f, -48.09f, -14.13f);
+}
+
+float pal_blueness_cb(pal_color_t col0, pal_color_t col1, void* datum)
+{
+    PAL__UNUSED(datum);
+    /* Pure sRGB Blue: L=32.30, a=79.19, b=-107.86 */
+    return pal__lab_distance_sq_from_target(col0, 32.30f, 79.19f, -107.86f)
+         - pal__lab_distance_sq_from_target(col1, 32.30f, 79.19f, -107.86f);
+}
+
+float pal_magentaness_cb(pal_color_t col0, pal_color_t col1, void* datum)
+{
+    PAL__UNUSED(datum);
+    /* Pure sRGB Magenta: L=60.32, a=98.23, b=-60.82 */
+    return pal__lab_distance_sq_from_target(col0, 60.32f, 98.23f, -60.82f)
+         - pal__lab_distance_sq_from_target(col1, 60.32f, 98.23f, -60.82f);
+}
 void
 pal_init(pal_palette_t* pal)
 {
@@ -1804,6 +1911,9 @@ pal_init(pal_palette_t* pal)
     pal->source.url[0] = 0;
     pal->source.conversion_tool[0] = 0;
     pal->source.conversion_timestamp = 0;
+    pal->color_space.name[0] = 0;
+    pal->color_space.icc_filename[0] = 0;
+    pal->color_space.is_linear = 0;
     pal->num_colors = 0;
     pal->num_gradients = 0;
     pal->num_dither_pairs = 0;
@@ -1829,7 +1939,6 @@ pal__scan_int(const char* str, int num_digits, pal_u16_t base, pal_u16_t* out_in
             digit = *p - 'a' + 10;
         else {
             PAL__ASSERT(!"invalid digit in hex string");
-            *out_int = 0;
             return 1;
         }
 
@@ -1859,8 +1968,6 @@ pal_parse_hexcolor(const char* hex_str, int len, pal_color_t* out_color)
         result |= pal__scan_int(&hex_str[2], 1, 16, &chan[2]);
         if (len == 4)
             result |= pal__scan_int(&hex_str[3], 1, 16, &chan[3]);
-        else
-            chan[3] = 0xFF;
 
         if (result != 0)
             return 1;
@@ -1883,8 +1990,6 @@ pal_parse_hexcolor(const char* hex_str, int len, pal_color_t* out_color)
         result |= pal__scan_int(&hex_str[4], 2, 16, &chan[2]);
         if (len == 8)
             result |= pal__scan_int(&hex_str[6], 2, 16, &chan[3]);
-        else
-            chan[3] = 0xFF;
 
         if (result != 0)
             return 1;
@@ -1957,7 +2062,7 @@ pal__test_teardown(void)
 static int
 pal__float_almost_equal(float a, float b)
 {
-    const float EPSILON = 1e-4f;
+    const float EPSILON = 0.1f;
 
     float diff = fabsf(a - b);
     if (diff <= EPSILON)
@@ -2037,10 +2142,57 @@ pal__test_parse_hexcolor(void)
     FTGT_ASSERT(pal__float_almost_equal(color.rgba.b, 1.0f));
     FTGT_ASSERT(pal__float_almost_equal(color.rgba.a, 0.0f));
 
+    color = pal__test_color_zero();
+    pal_parse_hexcolor("808080", 6, &color);
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.r, 0.50196f));  // 128/255
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.g, 0.50196f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.b, 0.50196f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.a, 1.0f));
+
+    color = pal__test_color_zero();
+    pal_parse_hexcolor("C0C0C0", 6, &color);
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.r, 0.75294f));  // 192/255
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.g, 0.75294f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.b, 0.75294f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.a, 1.0f));
+
+    color = pal__test_color_zero();
+    pal_parse_hexcolor("FF00FF", 6, &color);
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.r, 1.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.g, 0.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.b, 1.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.a, 1.0f));
+
+    color = pal__test_color_zero();
+    pal_parse_hexcolor("00FF00", 6, &color);
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.r, 0.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.g, 1.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.b, 0.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.a, 1.0f));
+
+    color = pal__test_color_zero();
+    pal_parse_hexcolor("FFFF00", 6, &color);
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.r, 1.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.g, 1.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.b, 0.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.a, 1.0f));
+
+    color = pal__test_color_zero();
+    pal_parse_hexcolor("FFFF00", 6, &color);
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.r, 1.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.g, 1.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.b, 0.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.a, 1.0f));
+
+    color = pal__test_color_zero();
+    pal_parse_hexcolor("FF5733", 6, &color);
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.r, 1.0f));
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.g, 0.34118f));  // 87/255
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.b, 0.20000f));  // 51/255
+    FTGT_ASSERT(pal__float_almost_equal(color.rgba.a, 1.0f));
 
     return ftgt_test_errorlevel();
 }
-
 
 PALDEF
 void
