@@ -43,10 +43,11 @@ typedef enum {
     FILE_KIND_PNG,
     FILE_KIND_JSON_PALETTE,
     FILE_KIND_GIMP_GPL,
+    FILE_KIND_JASC,
 } file_kind_t;
 
 const file_kind_t SUPPORTED_INPUT_FORMATS[] = {
-    FILE_KIND_ACO, FILE_KIND_JSON_PALETTE, FILE_KIND_PNG, FILE_KIND_GIMP_GPL, 0};
+    FILE_KIND_ACO, FILE_KIND_JSON_PALETTE, FILE_KIND_PNG, FILE_KIND_GIMP_GPL, FILE_KIND_JASC, 0};
 const file_kind_t SUPPORTED_OUTPUT_FORMATS[] = {
     FILE_KIND_JSON_PALETTE, FILE_KIND_PNG, FILE_KIND_GIMP_GPL, 0};
 
@@ -62,6 +63,8 @@ kind_to_string(file_kind_t kind)
         return "json (palette format)";
     case FILE_KIND_GIMP_GPL:
         return "gimp gpl";
+    case FILE_KIND_JASC:
+        return "jasc";
     default:
         return "unknown";
     }
@@ -111,6 +114,10 @@ file_kind_for_extension(const char* path)
 
     if (ftg_stricmp(ext, "gpl") == 0)
         return FILE_KIND_GIMP_GPL;
+
+    if (ftg_stricmp(ext, "pal") == 0)
+        return FILE_KIND_JASC;
+    ;
 
     return FILE_KIND_UNKNOWN;
 }
@@ -388,6 +395,22 @@ main(int argc, char* argv[])
 
     } break;
 
+    case FILE_KIND_JASC: {
+        ftg_off_t jasc_strlen;
+        u8*       jasc_string = ftg_file_read(args.in_file, true, &jasc_strlen);
+        if (jasc_string == NULL || jasc_strlen <= 1)
+            fatal(ftg_va("could not read '%s", args.in_file));
+
+        int result =
+            pal_parse_jasc(jasc_string, (unsigned int)jasc_strlen, &palette, NULL);
+        FTG_FREE(jasc_string);
+        if (result != 0) {
+            fatal(ftg_va("failed to parse '%s'", args.in_file));
+        }
+
+
+    } break;
+
     default:
         fatal("Unsupported input kind. --help lists supported kinds");
     }
@@ -400,7 +423,7 @@ main(int argc, char* argv[])
     case FILE_KIND_JSON_PALETTE: {
         int result = add_full_palette_gradients(&palette);
 
-        usize output_buf_bytes = (1 << 15);
+        usize output_buf_bytes = (1 << 19);
         char* buf = FTG_MALLOC(sizeof(u8), output_buf_bytes);
 
         result = pal_emit_palette_json(&palette, 1, buf, (int)output_buf_bytes);

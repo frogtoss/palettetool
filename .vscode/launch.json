@@ -5,17 +5,31 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(lldb) Launch",
+            "name": "(lldb) Debug",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/palettetool_d",
-            "args": ["--verbose", "--in", "../test/data/sweet_sweet_canyon_bad.json", "--out", "/tmp/out.png"],
+            "args": ["--verbose", "--in", "../test/data/jasc/Quake_192.pal", "--out", "../test/quake.pal.json"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],
-            "externalConsole": true,
+            "externalConsole": false,
             "MIMode": "lldb"
         },
+
+        {
+            "name": "(lldb) Debug large file",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/palettetool_d",
+            "args": ["--verbose", "--in", "../test/quake.pal.json", "--out", "../test/quake-out.pal.json"],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb"
+        }
+            
     ],
 
 }

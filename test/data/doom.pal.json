@@ -1,0 +1,1814 @@
+{
+    "palettes": [
+        {
+            "title": "Doom",
+            "color_hash": "4117975012",
+            "source": {
+                "conversion_tool": "ftg_palette.h - https://github.com/frogtoss/ftg",
+                "conversion_date": "1772389727"
+            },
+
+            "color_space": {
+                "name": "sRGB",
+                "icc_filename": "sRGB IEC61966-2.1.icc",
+                "is_linear": false
+            },
+
+            "colors": [
+                {
+                    "name": "unnamed 0",
+                    "red": 0.00000000,
+                    "green": 0.00000000,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 1",
+                    "red": 0.12109375,
+                    "green": 0.08984375,
+                    "blue": 0.04296875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 2",
+                    "red": 0.08984375,
+                    "green": 0.05859375,
+                    "blue": 0.02734375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 3",
+                    "red": 0.29296875,
+                    "green": 0.29296875,
+                    "blue": 0.29296875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 4",
+                    "red": 1.0,
+                    "green": 1.0,
+                    "blue": 1.0,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 5",
+                    "red": 0.10546875,
+                    "green": 0.10546875,
+                    "blue": 0.10546875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 6",
+                    "red": 0.07421875,
+                    "green": 0.07421875,
+                    "blue": 0.07421875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 7",
+                    "red": 0.04296875,
+                    "green": 0.04296875,
+                    "blue": 0.04296875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 8",
+                    "red": 0.02734375,
+                    "green": 0.02734375,
+                    "blue": 0.02734375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 9",
+                    "red": 0.18359375,
+                    "green": 0.21484375,
+                    "blue": 0.12109375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 10",
+                    "red": 0.13671875,
+                    "green": 0.16796875,
+                    "blue": 0.05859375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 11",
+                    "red": 0.08984375,
+                    "green": 0.12109375,
+                    "blue": 0.02734375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 12",
+                    "red": 0.05859375,
+                    "green": 0.08984375,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 13",
+                    "red": 0.30859375,
+                    "green": 0.23046875,
+                    "blue": 0.16796875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 14",
+                    "red": 0.27734375,
+                    "green": 0.19921875,
+                    "blue": 0.13671875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 15",
+                    "red": 0.24609375,
+                    "green": 0.16796875,
+                    "blue": 0.10546875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 16",
+                    "red": 1.0,
+                    "green": 0.71484375,
+                    "blue": 0.71484375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 17",
+                    "red": 0.96484375,
+                    "green": 0.66796875,
+                    "blue": 0.66796875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 18",
+                    "red": 0.94921875,
+                    "green": 0.63671875,
+                    "blue": 0.63671875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 19",
+                    "red": 0.91796875,
+                    "green": 0.58984375,
+                    "blue": 0.58984375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 20",
+                    "red": 0.90234375,
+                    "green": 0.55859375,
+                    "blue": 0.55859375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 21",
+                    "red": 0.87109375,
+                    "green": 0.52734375,
+                    "blue": 0.52734375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 22",
+                    "red": 0.85546875,
+                    "green": 0.48046875,
+                    "blue": 0.48046875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 23",
+                    "red": 0.82421875,
+                    "green": 0.44921875,
+                    "blue": 0.44921875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 24",
+                    "red": 0.79296875,
+                    "green": 0.41796875,
+                    "blue": 0.41796875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 25",
+                    "red": 0.77734375,
+                    "green": 0.38671875,
+                    "blue": 0.38671875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 26",
+                    "red": 0.74609375,
+                    "green": 0.35546875,
+                    "blue": 0.35546875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 27",
+                    "red": 0.73046875,
+                    "green": 0.33984375,
+                    "blue": 0.33984375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 28",
+                    "red": 0.69921875,
+                    "green": 0.30859375,
+                    "blue": 0.30859375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 29",
+                    "red": 0.68359375,
+                    "green": 0.27734375,
+                    "blue": 0.27734375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 30",
+                    "red": 0.65234375,
+                    "green": 0.24609375,
+                    "blue": 0.24609375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 31",
+                    "red": 0.63671875,
+                    "green": 0.23046875,
+                    "blue": 0.23046875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 32",
+                    "red": 0.60546875,
+                    "green": 0.19921875,
+                    "blue": 0.19921875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 33",
+                    "red": 0.58984375,
+                    "green": 0.18359375,
+                    "blue": 0.18359375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 34",
+                    "red": 0.55859375,
+                    "green": 0.16796875,
+                    "blue": 0.16796875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 35",
+                    "red": 0.54296875,
+                    "green": 0.13671875,
+                    "blue": 0.13671875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 36",
+                    "red": 0.51171875,
+                    "green": 0.12109375,
+                    "blue": 0.12109375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 37",
+                    "red": 0.50000000,
+                    "green": 0.10546875,
+                    "blue": 0.10546875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 38",
+                    "red": 0.46484375,
+                    "green": 0.08984375,
+                    "blue": 0.08984375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 39",
+                    "red": 0.44921875,
+                    "green": 0.07421875,
+                    "blue": 0.07421875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 40",
+                    "red": 0.41796875,
+                    "green": 0.05859375,
+                    "blue": 0.05859375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 41",
+                    "red": 0.40234375,
+                    "green": 0.04296875,
+                    "blue": 0.04296875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 42",
+                    "red": 0.37109375,
+                    "green": 0.02734375,
+                    "blue": 0.02734375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 43",
+                    "red": 0.35546875,
+                    "green": 0.02734375,
+                    "blue": 0.02734375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 44",
+                    "red": 0.32421875,
+                    "green": 0.02734375,
+                    "blue": 0.02734375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 45",
+                    "red": 0.30859375,
+                    "green": 0.00000000,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 46",
+                    "red": 0.27734375,
+                    "green": 0.00000000,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 47",
+                    "red": 0.26171875,
+                    "green": 0.00000000,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 48",
+                    "red": 1.0,
+                    "green": 0.91796875,
+                    "blue": 0.87109375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 49",
+                    "red": 1.0,
+                    "green": 0.88671875,
+                    "blue": 0.82421875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 50",
+                    "red": 1.0,
+                    "green": 0.85546875,
+                    "blue": 0.77734375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 51",
+                    "red": 1.0,
+                    "green": 0.82421875,
+                    "blue": 0.73046875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 52",
+                    "red": 1.0,
+                    "green": 0.80859375,
+                    "blue": 0.69921875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 53",
+                    "red": 1.0,
+                    "green": 0.77734375,
+                    "blue": 0.65234375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 54",
+                    "red": 1.0,
+                    "green": 0.74609375,
+                    "blue": 0.60546875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 55",
+                    "red": 1.0,
+                    "green": 0.73046875,
+                    "blue": 0.57421875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 56",
+                    "red": 1.0,
+                    "green": 0.69921875,
+                    "blue": 0.51171875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 57",
+                    "red": 0.96484375,
+                    "green": 0.66796875,
+                    "blue": 0.48046875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 58",
+                    "red": 0.93359375,
+                    "green": 0.63671875,
+                    "blue": 0.44921875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 59",
+                    "red": 0.90234375,
+                    "green": 0.60546875,
+                    "blue": 0.41796875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 60",
+                    "red": 0.87109375,
+                    "green": 0.57421875,
+                    "blue": 0.38671875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 61",
+                    "red": 0.83984375,
+                    "green": 0.54296875,
+                    "blue": 0.35546875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 62",
+                    "red": 0.80859375,
+                    "green": 0.51171875,
+                    "blue": 0.32421875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 63",
+                    "red": 0.79296875,
+                    "green": 0.50000000,
+                    "blue": 0.30859375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 64",
+                    "red": 0.74609375,
+                    "green": 0.48046875,
+                    "blue": 0.29296875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 65",
+                    "red": 0.69921875,
+                    "green": 0.44921875,
+                    "blue": 0.27734375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 66",
+                    "red": 0.66796875,
+                    "green": 0.43359375,
+                    "blue": 0.26171875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 67",
+                    "red": 0.63671875,
+                    "green": 0.41796875,
+                    "blue": 0.24609375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 68",
+                    "red": 0.60546875,
+                    "green": 0.38671875,
+                    "blue": 0.23046875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 69",
+                    "red": 0.55859375,
+                    "green": 0.37109375,
+                    "blue": 0.21484375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 70",
+                    "red": 0.52734375,
+                    "green": 0.33984375,
+                    "blue": 0.19921875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 71",
+                    "red": 0.50000000,
+                    "green": 0.32421875,
+                    "blue": 0.18359375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 72",
+                    "red": 0.46484375,
+                    "green": 0.30859375,
+                    "blue": 0.16796875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 73",
+                    "red": 0.41796875,
+                    "green": 0.27734375,
+                    "blue": 0.15234375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 74",
+                    "red": 0.37109375,
+                    "green": 0.26171875,
+                    "blue": 0.13671875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 75",
+                    "red": 0.32421875,
+                    "green": 0.24609375,
+                    "blue": 0.12109375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 76",
+                    "red": 0.29296875,
+                    "green": 0.21484375,
+                    "blue": 0.10546875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 77",
+                    "red": 0.24609375,
+                    "green": 0.18359375,
+                    "blue": 0.08984375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 78",
+                    "red": 0.19921875,
+                    "green": 0.16796875,
+                    "blue": 0.07421875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 79",
+                    "red": 0.16796875,
+                    "green": 0.13671875,
+                    "blue": 0.05859375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 80",
+                    "red": 0.93359375,
+                    "green": 0.93359375,
+                    "blue": 0.93359375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 81",
+                    "red": 0.90234375,
+                    "green": 0.90234375,
+                    "blue": 0.90234375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 82",
+                    "red": 0.87109375,
+                    "green": 0.87109375,
+                    "blue": 0.87109375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 83",
+                    "red": 0.85546875,
+                    "green": 0.85546875,
+                    "blue": 0.85546875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 84",
+                    "red": 0.82421875,
+                    "green": 0.82421875,
+                    "blue": 0.82421875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 85",
+                    "red": 0.79296875,
+                    "green": 0.79296875,
+                    "blue": 0.79296875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 86",
+                    "red": 0.77734375,
+                    "green": 0.77734375,
+                    "blue": 0.77734375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 87",
+                    "red": 0.74609375,
+                    "green": 0.74609375,
+                    "blue": 0.74609375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 88",
+                    "red": 0.71484375,
+                    "green": 0.71484375,
+                    "blue": 0.71484375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 89",
+                    "red": 0.69921875,
+                    "green": 0.69921875,
+                    "blue": 0.69921875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 90",
+                    "red": 0.66796875,
+                    "green": 0.66796875,
+                    "blue": 0.66796875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 91",
+                    "red": 0.65234375,
+                    "green": 0.65234375,
+                    "blue": 0.65234375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 92",
+                    "red": 0.62109375,
+                    "green": 0.62109375,
+                    "blue": 0.62109375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 93",
+                    "red": 0.58984375,
+                    "green": 0.58984375,
+                    "blue": 0.58984375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 94",
+                    "red": 0.57421875,
+                    "green": 0.57421875,
+                    "blue": 0.57421875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 95",
+                    "red": 0.54296875,
+                    "green": 0.54296875,
+                    "blue": 0.54296875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 96",
+                    "red": 0.51171875,
+                    "green": 0.51171875,
+                    "blue": 0.51171875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 97",
+                    "red": 0.50000000,
+                    "green": 0.50000000,
+                    "blue": 0.50000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 98",
+                    "red": 0.46484375,
+                    "green": 0.46484375,
+                    "blue": 0.46484375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 99",
+                    "red": 0.43359375,
+                    "green": 0.43359375,
+                    "blue": 0.43359375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 100",
+                    "red": 0.41796875,
+                    "green": 0.41796875,
+                    "blue": 0.41796875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 101",
+                    "red": 0.38671875,
+                    "green": 0.38671875,
+                    "blue": 0.38671875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 102",
+                    "red": 0.35546875,
+                    "green": 0.35546875,
+                    "blue": 0.35546875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 103",
+                    "red": 0.33984375,
+                    "green": 0.33984375,
+                    "blue": 0.33984375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 104",
+                    "red": 0.30859375,
+                    "green": 0.30859375,
+                    "blue": 0.30859375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 105",
+                    "red": 0.27734375,
+                    "green": 0.27734375,
+                    "blue": 0.27734375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 106",
+                    "red": 0.26171875,
+                    "green": 0.26171875,
+                    "blue": 0.26171875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 107",
+                    "red": 0.23046875,
+                    "green": 0.23046875,
+                    "blue": 0.23046875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 108",
+                    "red": 0.21484375,
+                    "green": 0.21484375,
+                    "blue": 0.21484375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 109",
+                    "red": 0.18359375,
+                    "green": 0.18359375,
+                    "blue": 0.18359375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 110",
+                    "red": 0.15234375,
+                    "green": 0.15234375,
+                    "blue": 0.15234375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 111",
+                    "red": 0.13671875,
+                    "green": 0.13671875,
+                    "blue": 0.13671875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 112",
+                    "red": 0.46484375,
+                    "green": 1.0,
+                    "blue": 0.43359375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 113",
+                    "red": 0.43359375,
+                    "green": 0.93359375,
+                    "blue": 0.40234375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 114",
+                    "red": 0.40234375,
+                    "green": 0.87109375,
+                    "blue": 0.37109375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 115",
+                    "red": 0.37109375,
+                    "green": 0.80859375,
+                    "blue": 0.33984375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 116",
+                    "red": 0.35546875,
+                    "green": 0.74609375,
+                    "blue": 0.30859375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 117",
+                    "red": 0.32421875,
+                    "green": 0.68359375,
+                    "blue": 0.27734375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 118",
+                    "red": 0.29296875,
+                    "green": 0.62109375,
+                    "blue": 0.24609375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 119",
+                    "red": 0.26171875,
+                    "green": 0.57421875,
+                    "blue": 0.21484375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 120",
+                    "red": 0.24609375,
+                    "green": 0.51171875,
+                    "blue": 0.18359375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 121",
+                    "red": 0.21484375,
+                    "green": 0.44921875,
+                    "blue": 0.16796875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 122",
+                    "red": 0.18359375,
+                    "green": 0.38671875,
+                    "blue": 0.13671875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 123",
+                    "red": 0.15234375,
+                    "green": 0.32421875,
+                    "blue": 0.10546875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 124",
+                    "red": 0.12109375,
+                    "green": 0.26171875,
+                    "blue": 0.08984375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 125",
+                    "red": 0.08984375,
+                    "green": 0.19921875,
+                    "blue": 0.05859375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 126",
+                    "red": 0.07421875,
+                    "green": 0.13671875,
+                    "blue": 0.04296875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 127",
+                    "red": 0.04296875,
+                    "green": 0.08984375,
+                    "blue": 0.02734375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 128",
+                    "red": 0.74609375,
+                    "green": 0.65234375,
+                    "blue": 0.55859375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 129",
+                    "red": 0.71484375,
+                    "green": 0.62109375,
+                    "blue": 0.52734375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 130",
+                    "red": 0.68359375,
+                    "green": 0.58984375,
+                    "blue": 0.50000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 131",
+                    "red": 0.65234375,
+                    "green": 0.55859375,
+                    "blue": 0.46484375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 132",
+                    "red": 0.62109375,
+                    "green": 0.52734375,
+                    "blue": 0.43359375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 133",
+                    "red": 0.60546875,
+                    "green": 0.50000000,
+                    "blue": 0.41796875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 134",
+                    "red": 0.57421875,
+                    "green": 0.48046875,
+                    "blue": 0.38671875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 135",
+                    "red": 0.54296875,
+                    "green": 0.44921875,
+                    "blue": 0.35546875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 136",
+                    "red": 0.51171875,
+                    "green": 0.41796875,
+                    "blue": 0.33984375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 137",
+                    "red": 0.48046875,
+                    "green": 0.38671875,
+                    "blue": 0.30859375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 138",
+                    "red": 0.46484375,
+                    "green": 0.37109375,
+                    "blue": 0.29296875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 139",
+                    "red": 0.43359375,
+                    "green": 0.33984375,
+                    "blue": 0.26171875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 140",
+                    "red": 0.40234375,
+                    "green": 0.32421875,
+                    "blue": 0.24609375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 141",
+                    "red": 0.37109375,
+                    "green": 0.29296875,
+                    "blue": 0.21484375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 142",
+                    "red": 0.33984375,
+                    "green": 0.26171875,
+                    "blue": 0.19921875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 143",
+                    "red": 0.32421875,
+                    "green": 0.24609375,
+                    "blue": 0.18359375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 144",
+                    "red": 0.62109375,
+                    "green": 0.51171875,
+                    "blue": 0.38671875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 145",
+                    "red": 0.55859375,
+                    "green": 0.46484375,
+                    "blue": 0.32421875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 146",
+                    "red": 0.51171875,
+                    "green": 0.41796875,
+                    "blue": 0.29296875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 147",
+                    "red": 0.46484375,
+                    "green": 0.37109375,
+                    "blue": 0.24609375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 148",
+                    "red": 0.40234375,
+                    "green": 0.32421875,
+                    "blue": 0.19921875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 149",
+                    "red": 0.35546875,
+                    "green": 0.27734375,
+                    "blue": 0.16796875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 150",
+                    "red": 0.30859375,
+                    "green": 0.23046875,
+                    "blue": 0.13671875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 151",
+                    "red": 0.26171875,
+                    "green": 0.19921875,
+                    "blue": 0.10546875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 152",
+                    "red": 0.48046875,
+                    "green": 0.50000000,
+                    "blue": 0.38671875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 153",
+                    "red": 0.43359375,
+                    "green": 0.44921875,
+                    "blue": 0.33984375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 154",
+                    "red": 0.40234375,
+                    "green": 0.41796875,
+                    "blue": 0.30859375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 155",
+                    "red": 0.35546875,
+                    "green": 0.38671875,
+                    "blue": 0.27734375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 156",
+                    "red": 0.32421875,
+                    "green": 0.33984375,
+                    "blue": 0.23046875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 157",
+                    "red": 0.27734375,
+                    "green": 0.30859375,
+                    "blue": 0.19921875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 158",
+                    "red": 0.24609375,
+                    "green": 0.27734375,
+                    "blue": 0.16796875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 159",
+                    "red": 0.21484375,
+                    "green": 0.24609375,
+                    "blue": 0.15234375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 160",
+                    "red": 1.0,
+                    "green": 1.0,
+                    "blue": 0.44921875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 161",
+                    "red": 0.91796875,
+                    "green": 0.85546875,
+                    "blue": 0.33984375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 162",
+                    "red": 0.83984375,
+                    "green": 0.73046875,
+                    "blue": 0.26171875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 163",
+                    "red": 0.76171875,
+                    "green": 0.60546875,
+                    "blue": 0.18359375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 164",
+                    "red": 0.68359375,
+                    "green": 0.48046875,
+                    "blue": 0.12109375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 165",
+                    "red": 0.60546875,
+                    "green": 0.35546875,
+                    "blue": 0.07421875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 166",
+                    "red": 0.52734375,
+                    "green": 0.26171875,
+                    "blue": 0.02734375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 167",
+                    "red": 0.44921875,
+                    "green": 0.16796875,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 168",
+                    "red": 1.0,
+                    "green": 0.85546875,
+                    "blue": 0.85546875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 169",
+                    "red": 1.0,
+                    "green": 0.73046875,
+                    "blue": 0.73046875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 170",
+                    "red": 1.0,
+                    "green": 0.60546875,
+                    "blue": 0.60546875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 171",
+                    "red": 1.0,
+                    "green": 0.48046875,
+                    "blue": 0.48046875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 172",
+                    "red": 1.0,
+                    "green": 0.37109375,
+                    "blue": 0.37109375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 173",
+                    "red": 1.0,
+                    "green": 0.24609375,
+                    "blue": 0.24609375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 174",
+                    "red": 1.0,
+                    "green": 0.12109375,
+                    "blue": 0.12109375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 175",
+                    "red": 1.0,
+                    "green": 0.00000000,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 176",
+                    "red": 0.93359375,
+                    "green": 0.00000000,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 177",
+                    "red": 0.88671875,
+                    "green": 0.00000000,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 178",
+                    "red": 0.83984375,
+                    "green": 0.00000000,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 179",
+                    "red": 0.79296875,
+                    "green": 0.00000000,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 180",
+                    "red": 0.74609375,
+                    "green": 0.00000000,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 181",
+                    "red": 0.69921875,
+                    "green": 0.00000000,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 182",
+                    "red": 0.65234375,
+                    "green": 0.00000000,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 183",
+                    "red": 0.60546875,
+                    "green": 0.00000000,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 184",
+                    "red": 0.54296875,
+                    "green": 0.00000000,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 185",
+                    "red": 0.50000000,
+                    "green": 0.00000000,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 186",
+                    "red": 0.44921875,
+                    "green": 0.00000000,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 187",
+                    "red": 0.40234375,
+                    "green": 0.00000000,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 188",
+                    "red": 0.35546875,
+                    "green": 0.00000000,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 189",
+                    "red": 0.90234375,
+                    "green": 0.90234375,
+                    "blue": 1.0,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 190",
+                    "red": 0.77734375,
+                    "green": 0.77734375,
+                    "blue": 1.0,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 191",
+                    "red": 0.66796875,
+                    "green": 0.66796875,
+                    "blue": 1.0,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 192",
+                    "red": 0.55859375,
+                    "green": 0.55859375,
+                    "blue": 1.0,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 193",
+                    "red": 0.44921875,
+                    "green": 0.44921875,
+                    "blue": 1.0,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 194",
+                    "red": 0.32421875,
+                    "green": 0.32421875,
+                    "blue": 1.0,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 195",
+                    "red": 0.21484375,
+                    "green": 0.21484375,
+                    "blue": 1.0,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 196",
+                    "red": 0.10546875,
+                    "green": 0.10546875,
+                    "blue": 1.0,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 197",
+                    "red": 0.00000000,
+                    "green": 0.00000000,
+                    "blue": 1.0,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 198",
+                    "red": 0.00000000,
+                    "green": 0.00000000,
+                    "blue": 0.88671875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 199",
+                    "red": 0.00000000,
+                    "green": 0.00000000,
+                    "blue": 0.79296875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 200",
+                    "red": 0.00000000,
+                    "green": 0.00000000,
+                    "blue": 0.69921875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 201",
+                    "red": 0.00000000,
+                    "green": 0.00000000,
+                    "blue": 0.60546875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 202",
+                    "red": 0.00000000,
+                    "green": 0.00000000,
+                    "blue": 0.51171875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 203",
+                    "red": 0.00000000,
+                    "green": 0.00000000,
+                    "blue": 0.41796875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 204",
+                    "red": 0.00000000,
+                    "green": 0.00000000,
+                    "blue": 0.32421875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 205",
+                    "red": 1.0,
+                    "green": 0.91796875,
+                    "blue": 0.85546875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 206",
+                    "red": 1.0,
+                    "green": 0.83984375,
+                    "blue": 0.73046875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 207",
+                    "red": 1.0,
+                    "green": 0.77734375,
+                    "blue": 0.60546875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 208",
+                    "red": 1.0,
+                    "green": 0.69921875,
+                    "blue": 0.48046875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 209",
+                    "red": 1.0,
+                    "green": 0.63671875,
+                    "blue": 0.35546875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 210",
+                    "red": 1.0,
+                    "green": 0.55859375,
+                    "blue": 0.23046875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 211",
+                    "red": 1.0,
+                    "green": 0.50000000,
+                    "blue": 0.10546875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 212",
+                    "red": 0.94921875,
+                    "green": 0.44921875,
+                    "blue": 0.08984375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 213",
+                    "red": 0.91796875,
+                    "green": 0.43359375,
+                    "blue": 0.05859375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 214",
+                    "red": 0.87109375,
+                    "green": 0.40234375,
+                    "blue": 0.05859375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 215",
+                    "red": 0.83984375,
+                    "green": 0.37109375,
+                    "blue": 0.04296875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 216",
+                    "red": 0.79296875,
+                    "green": 0.33984375,
+                    "blue": 0.02734375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 217",
+                    "red": 0.76171875,
+                    "green": 0.30859375,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 218",
+                    "red": 0.71484375,
+                    "green": 0.27734375,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 219",
+                    "red": 0.68359375,
+                    "green": 0.26171875,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 220",
+                    "red": 1.0,
+                    "green": 1.0,
+                    "blue": 0.83984375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 221",
+                    "red": 1.0,
+                    "green": 1.0,
+                    "blue": 0.69921875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 222",
+                    "red": 1.0,
+                    "green": 1.0,
+                    "blue": 0.55859375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 223",
+                    "red": 1.0,
+                    "green": 1.0,
+                    "blue": 0.41796875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 224",
+                    "red": 1.0,
+                    "green": 1.0,
+                    "blue": 0.27734375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 225",
+                    "red": 1.0,
+                    "green": 1.0,
+                    "blue": 0.13671875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 226",
+                    "red": 1.0,
+                    "green": 1.0,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 227",
+                    "red": 0.65234375,
+                    "green": 0.24609375,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 228",
+                    "red": 0.62109375,
+                    "green": 0.21484375,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 229",
+                    "red": 0.57421875,
+                    "green": 0.18359375,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 230",
+                    "red": 0.52734375,
+                    "green": 0.13671875,
+                    "blue": 0.00000000,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 231",
+                    "red": 0.30859375,
+                    "green": 0.23046875,
+                    "blue": 0.15234375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 232",
+                    "red": 0.26171875,
+                    "green": 0.18359375,
+                    "blue": 0.10546875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 233",
+                    "red": 0.21484375,
+                    "green": 0.13671875,
+                    "blue": 0.07421875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 234",
+                    "red": 0.18359375,
+                    "green": 0.10546875,
+                    "blue": 0.04296875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 235",
+                    "red": 0.00000000,
+                    "green": 0.00000000,
+                    "blue": 0.27734375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 236",
+                    "red": 0.00000000,
+                    "green": 0.00000000,
+                    "blue": 0.23046875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 237",
+                    "red": 0.00000000,
+                    "green": 0.00000000,
+                    "blue": 0.18359375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 238",
+                    "red": 0.00000000,
+                    "green": 0.00000000,
+                    "blue": 0.13671875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 239",
+                    "red": 0.00000000,
+                    "green": 0.00000000,
+                    "blue": 0.08984375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 240",
+                    "red": 0.00000000,
+                    "green": 0.00000000,
+                    "blue": 0.04296875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 241",
+                    "red": 1.0,
+                    "green": 0.62109375,
+                    "blue": 0.26171875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 242",
+                    "red": 1.0,
+                    "green": 0.90234375,
+                    "blue": 0.29296875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 243",
+                    "red": 1.0,
+                    "green": 0.48046875,
+                    "blue": 1.0,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 244",
+                    "red": 1.0,
+                    "green": 0.00000000,
+                    "blue": 1.0,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 245",
+                    "red": 0.80859375,
+                    "green": 0.00000000,
+                    "blue": 0.80859375,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 246",
+                    "red": 0.62109375,
+                    "green": 0.00000000,
+                    "blue": 0.60546875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 247",
+                    "red": 0.43359375,
+                    "green": 0.00000000,
+                    "blue": 0.41796875,
+                    "alpha": 1.0
+                },
+                {
+                    "name": "unnamed 248",
+                    "red": 0.65234375,
+                    "green": 0.41796875,
+                    "blue": 0.41796875,
+                    "alpha": 1.0
+                }
+            ],
+
+            "hints": {
+
+            },
+
+            "gradients": {
+                "Unnamed": [
+                    "unnamed 189",
+                    "unnamed 48",
+                    "unnamed 80",
+                    "unnamed 205",
+                    "unnamed 168",
+                    "unnamed 220",
+                    "unnamed 81",
+                    "unnamed 190",
+                    "unnamed 82",
+                    "unnamed 83",
+                    "unnamed 84",
+                    "unnamed 85",
+                    "unnamed 86",
+                    "unnamed 87",
+                    "unnamed 88",
+                    "unnamed 89",
+                    "unnamed 90",
+                    "unnamed 91",
+                    "unnamed 92",
+                    "unnamed 93",
+                    "unnamed 94",
+                    "unnamed 95",
+                    "unnamed 96",
+                    "unnamed 97",
+                    "unnamed 98",
+                    "unnamed 99",
+                    "unnamed 100",
+                    "unnamed 101",
+                    "unnamed 102",
+                    "unnamed 103",
+                    "unnamed 104",
+                    "unnamed 105",
+                    "unnamed 106",
+                    "unnamed 107",
+                    "unnamed 108",
+                    "unnamed 109",
+                    "unnamed 110",
+                    "unnamed 111"
+                ]
+            },
+
+            "dither_pairs": {
+            }
+        }
+    ]
+}

@@ -50,7 +50,7 @@
 #define JSON_UNUSED(x) ((void)x)
 
 // increase this for multiple palettes in a json doc
-#define MAX_JSMN_TOKENS 1024
+#define MAX_JSMN_TOKENS (1 << 17)
 
 typedef struct {
     jsmntok_t   tok[MAX_JSMN_TOKENS];

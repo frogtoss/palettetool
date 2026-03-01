@@ -52,6 +52,7 @@
 
    0.1  (Jan 2024)   Initial version
    0.2  (May 2025)   Colorspaces
+   0.3  (Mar 2026)   Perceptive color sorting, JASC PAL import
 
    LICENSE
 
@@ -103,7 +104,7 @@
 extern "C"
 #endif
 
-#define PAL_MAX_COLORS 255
+#define PAL_MAX_COLORS 256
 #define PAL_MAX_GRADIENT_INDICES (PAL_MAX_COLORS * 2)
 #define PAL_MAX_STRLEN 48
 typedef enum {
@@ -244,7 +245,8 @@ int pal_parse_aco(const unsigned char* bytes,
 // channels is 3 or 4
 // bytes is assumed to be rgb or rgba
 //
-// assign
+// assign the color space sRGB to the colors, but perform
+// no color data conversion
 int pal_parse_bytes(const unsigned char* bytes,
                     unsigned int         len,
                     int                  num_channels,
@@ -256,11 +258,23 @@ int pal_parse_bytes(const unsigned char* bytes,
 // if aco_source_url is NULL, no URL will be specified
 //
 // assign the color space sRGB to the colors, but perform
-// no data conversion
+// no color data conversion
 int pal_parse_gpl(const unsigned char* bytes,
                   unsigned int         len,
                   pal_palette_t*       out_pal,
                   const char*          gpl_source_url);
+
+
+// parse a JASC (Paint Shop Pro) palette into a pal_palette_t
+//
+// if jasc_source_url is NULL, no URL will be specified
+//
+// assign the color space sRGB to the colors, but perform
+// no color data conversion
+int pal_parse_jasc(const unsigned char *bytes,
+                   unsigned int len,
+                   pal_palette_t *out_pal,
+                   const char *jasc_source_url);
 
 // parse a hex color string into a pal_color_t
 // no '#' prefix, and accepts len as:
@@ -404,6 +418,7 @@ pal__append_buf(char** out_buf, int* out_buf_remaining, const char* str)
 {
     while (*str) {
         if (*out_buf_remaining == 0) {
+            printf("buf:\n%s", *out_buf);
             PAL__ASSERT(!"Ran out of space appending buf");
             return 1;
         }
@@ -1469,6 +1484,8 @@ pal__parse_name(const char* p, const char* end, char* out)
 }
 
 
+
+
 PALDEF int
 pal_parse_gpl(const unsigned char* bytes,
               unsigned int         len,
@@ -1566,6 +1583,111 @@ pal_parse_gpl(const unsigned char* bytes,
             ++p;
     }
 
+    return 0;
+}
+
+static int
+pal__validate_magic(const char *magic, size_t len, const char **p, const char *end, bool scan_past_eol_chars) {
+    if (end - *p < (ptrdiff_t)len)
+        return 1;
+
+    for (size_t i = 0; i < len; i++) {
+        if (**p != magic[i]) {
+            PAL__ASSERT("expected magic string not found");
+            return 1;
+        }
+        (*p)++;
+    }
+    
+    while (scan_past_eol_chars && (**p == '\n' || **p == '\r'))
+        (*p)++;
+    
+    return 0;
+}
+
+PALDEF int
+pal_parse_jasc(const unsigned char *bytes,
+               unsigned int len,
+               pal_palette_t *out_pal,
+               const char *jasc_source_url)
+{
+    const char *p = (const char*)bytes;
+    const char* end = p + (len > 1 ? len - 1 : 0);
+    
+    const char MAGIC0[] = "JASC-PAL";
+    if (pal__validate_magic(MAGIC0, sizeof(MAGIC0)-1, &p, end, true) != 0) {
+        return 1;
+    }
+
+    const char MAGIC1[] = "0100";
+    if (pal__validate_magic(MAGIC1, sizeof(MAGIC1)-1, &p, end, true) != 0) {
+        return 1;
+    }
+    
+    out_pal->num_colors = 0;
+    out_pal->title[0] = 0;
+    out_pal->num_gradients = 0;
+    out_pal->num_dither_pairs = 0;
+
+    {
+        int i;
+        for (i = 0; i < PAL_MAX_COLORS; i++) out_pal->num_hints[i] = 0;
+    }
+    pal__palette_set_srgb(out_pal);
+
+    pal__strncpy(
+        out_pal->source.conversion_tool,
+        "ftg_palette.h - https://github.com/frogtoss/ftg_toolbox_public",
+        PAL_MAX_STRLEN);
+    out_pal->source.conversion_timestamp = PAL_TIME(NULL);
+    
+    
+    /* p is now at the number of colours line */
+    int jasc_num_colors = pal__parse_base10_int(&p, end);
+    if (jasc_num_colors > 256) {
+        PAL__ASSERT("jasc palette can't have more than 256 colors");
+        return 1;
+    }
+    if (jasc_num_colors <= 0) {
+        PAL__ASSERT("jasc palette can't have 0 colors");
+        return 1;
+    }
+    while (p < end && (*p == '\n' || *p == '\r')) p++;  
+
+    // todo: semcompress
+    pal__strncpy(
+        out_pal->source.conversion_tool,
+        "ftg_palette.h - https://github.com/frogtoss/ftg_toolbox_public",
+        PAL_MAX_STRLEN);
+    out_pal->source.conversion_timestamp = PAL_TIME(NULL);
+    
+    for (int i = 0; i < jasc_num_colors; i++) {
+        if (*p == '\0' || p > end) {
+            PAL__ASSERT("Premature end to JASC palette");
+            return 1;
+        }
+
+        int r = pal__parse_base10_int(&p, end);
+        int g = pal__parse_base10_int(&p, end);
+        int b = pal__parse_base10_int(&p, end);
+
+        while (p < end && (*p == '\n' || *p == '\r')) p++;
+        
+        pal_color_t* col = &out_pal->colors[out_pal->num_colors];
+        
+        out_pal->num_colors++;
+
+        col->rgba.r = pal_convert_channel_to_f32(pal__clamp8(r, 0, 255));
+        col->rgba.g = pal_convert_channel_to_f32(pal__clamp8(g, 0, 255));
+        col->rgba.b = pal_convert_channel_to_f32(pal__clamp8(b, 0, 255));
+        col->rgba.a = 1.0f;
+
+    }
+
+    if (jasc_source_url != NULL) {
+        pal__strncpy(out_pal->source.url, jasc_source_url, PAL_MAX_STRLEN);
+    }
+    
     return 0;
 }
 

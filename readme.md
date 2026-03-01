@@ -4,15 +4,16 @@ Convert between palette formats.
 
 Includes support for an 'open palette' JSON format, which has the following features:
 
- - convert .gpl, .aco, .json open palette and .png files into multiple formats
+ - convert .gpl, .aco, .pal (JASC) and .json open palette and .png files into multiple formats
  - easy to read and parse
- - source fields exist to credit original author
+ - source fields exist to credit original palette author
  - 32-bits per channel
  - named colours
  - usage hints for colours to allow for colour theme conversions between programs
  - specify relationships between colours with gradients and dithers
  - MIT C source reader/writer support for format exists
-
+ 
+Palette Tool isn't trying to be an industrial strength tool for technical colorists. OpenColorIO, ACES, CIELAB, spectral data structures and USD color management are all out of scope.
 
 ## Usage ##
 
