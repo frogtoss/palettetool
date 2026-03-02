@@ -595,6 +595,11 @@ pal_emit_palette_json(const pal_palette_t* pals, int num_pals, char* out_buf, in
         char                 num_buf[64];
         char*                p_num_buf;
 
+        // comma separation
+        if (i) {
+            PAL__APPEND(",");
+        }
+
         // palette sub-document
         PAL__APPEND_TABS(tab++);
         PAL__APPEND("{\n");
@@ -1623,24 +1628,22 @@ pal_parse_jasc(const unsigned char *bytes,
     if (pal__validate_magic(MAGIC1, sizeof(MAGIC1)-1, &p, end, true) != 0) {
         return 1;
     }
-    
+
+    // todo: write a function to zero init all these, and missing fields
     out_pal->num_colors = 0;
     out_pal->title[0] = 0;
     out_pal->num_gradients = 0;
     out_pal->num_dither_pairs = 0;
-
     {
         int i;
         for (i = 0; i < PAL_MAX_COLORS; i++) out_pal->num_hints[i] = 0;
     }
     pal__palette_set_srgb(out_pal);
-
     pal__strncpy(
         out_pal->source.conversion_tool,
         "ftg_palette.h - https://github.com/frogtoss/ftg_toolbox_public",
         PAL_MAX_STRLEN);
     out_pal->source.conversion_timestamp = PAL_TIME(NULL);
-    
     
     /* p is now at the number of colours line */
     int jasc_num_colors = pal__parse_base10_int(&p, end);
@@ -1671,8 +1674,9 @@ pal_parse_jasc(const unsigned char *bytes,
         int g = pal__parse_base10_int(&p, end);
         int b = pal__parse_base10_int(&p, end);
 
-        while (p < end && (*p == '\n' || *p == '\r')) p++;
-        
+        while (p < end && (*p == '\n' || *p == '\r')) p++;  
+
+
         pal_color_t* col = &out_pal->colors[out_pal->num_colors];
         
         out_pal->num_colors++;
@@ -1687,7 +1691,6 @@ pal_parse_jasc(const unsigned char *bytes,
     if (jasc_source_url != NULL) {
         pal__strncpy(out_pal->source.url, jasc_source_url, PAL_MAX_STRLEN);
     }
-    
     return 0;
 }
 
