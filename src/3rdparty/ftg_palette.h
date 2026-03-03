@@ -53,6 +53,7 @@
    0.1  (Jan 2024)   Initial version
    0.2  (May 2025)   Colorspaces
    0.3  (Mar 2026)   Perceptive color sorting, JASC PAL import
+                     Hex floats 
 
    LICENSE
 
@@ -573,6 +574,18 @@ pal__strmatch(const char* s1, int s1_len, const char* s2, int s2_len)
 
 #define PAL__WALK_BACK(n) out_buf -= (n), out_buf_remaining -= (n);
 
+static int 
+pal__f32_to_hex_string(float f, char* buf, int len)
+{
+    if (len < 8)
+        return 1;
+    
+    uint32_t bits;
+    memcpy(&bits, &f, sizeof(float));
+    sprintf(buf, "%08x", bits);
+
+    return 0;
+}
 
 
 PALDEF int
@@ -667,18 +680,17 @@ pal_emit_palette_json(const pal_palette_t* pals, int num_pals, char* out_buf, in
             PAL__APPEND("{\n");
             PAL__APPEND_JSON_KEYVALUE_STRING("name", pal->color_names[j], 1);
 
+            result |= pal__f32_to_hex_string(pal->colors[j].rgba.r, num_buf, 64);
+            PAL__APPEND_JSON_KEYVALUE_STRING("red", num_buf, 1);
 
-            result |= pal__float_to_str(pal->colors[j].rgba.r, num_buf, 64);
-            PAL__APPEND_JSON_KEYVALUE_NOQUOTE("red", num_buf, 3);
+            result |= pal__f32_to_hex_string(pal->colors[j].rgba.g, num_buf, 64);
+            PAL__APPEND_JSON_KEYVALUE_STRING("green", num_buf, 1);
 
-            result |= pal__float_to_str(pal->colors[j].rgba.g, num_buf, 64);
-            PAL__APPEND_JSON_KEYVALUE_NOQUOTE("green", num_buf, 3);
-
-            result |= pal__float_to_str(pal->colors[j].rgba.b, num_buf, 64);
-            PAL__APPEND_JSON_KEYVALUE_NOQUOTE("blue", num_buf, 3);
-
-            result |= pal__float_to_str(pal->colors[j].rgba.a, num_buf, 64);
-            PAL__APPEND_JSON_KEYVALUE_NOQUOTE("alpha", num_buf, 2);
+            result |= pal__f32_to_hex_string(pal->colors[j].rgba.b, num_buf, 64);
+            PAL__APPEND_JSON_KEYVALUE_STRING("blue", num_buf, 1);
+            
+            result |= pal__f32_to_hex_string(pal->colors[j].rgba.a, num_buf, 64);
+            PAL__APPEND_JSON_KEYVALUE_STRING("alpha", num_buf, 0);
 
             tab--;
             PAL__APPEND(PAL__3TAB PAL__TAB "}");

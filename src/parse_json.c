@@ -40,7 +40,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>  // for strtod
+#include <stdlib.h>  // for memcpy, strtoul
 #include <assert.h>
 
 #include "3rdparty/ftg_palette.h"
@@ -72,6 +72,17 @@ typedef struct {
         json_error(ctx, "unexpected token", *i);                               \
         return 1;                                                              \
     }
+
+
+static float
+hex_to_f32(const char* hex)
+{
+    uint32_t bits = (uint32_t)strtoul(hex, NULL, 16);
+    float    f;
+    memcpy(&f, &bits, sizeof(float));
+    return f;
+}
+
 
 // max_copy includes null byte
 static int
@@ -283,14 +294,21 @@ json_write_value_float_on_match_key(json_context_t* ctx,
         json_skip(ctx, i);
 
         (*out_inc_on_match)++;
+        if (ctx->tok[*i].type == JSMN_PRIMITIVE) {
+            // handle decimal float parsing (discouraged)
+            *out_float = (float)strtod(ctx->str + ctx->tok[*i].start, NULL);
 
-        if (json_expect(ctx, JSMN_PRIMITIVE, *i) != 0) {
-            json_error(ctx, "expected primitive token type", *i);
+        } else if (ctx->tok[*i].type == JSMN_STRING) {
+            // handle hex float in string parsing (preferred)
+
+            // note: if *out_float is 0.0, it would be possible to check
+            // if the string is actually "00000000", and if it isn't, it's
+            // a bad parse
+            *out_float = hex_to_f32(ctx->str + ctx->tok[*i].start);
+        } else {
+            json_error(ctx, "expected string or primitive token type", *i);
             return 1;
         }
-
-        *out_float = (float)strtod(ctx->str + ctx->tok[*i].start, NULL);
-        // can't distinguish between 0.0 and error conversion error
     }
 
     return 0;
@@ -311,7 +329,6 @@ json_write_value_ull_on_match_key(json_context_t*     ctx,
             json_error(ctx, "expected primitive token type", *i);
             return 1;
         }
-
 
         *out_num = strtoull(ctx->str + ctx->tok[*i].start, NULL, 10);
     }
@@ -809,7 +826,7 @@ parse_json_into_palettes(const char*    json_str,
     ctx.num_tokens =
         jsmn_parse(&parser, json_str, json_strlen, ctx.tok, MAX_JSMN_TOKENS);
     if (ctx.num_tokens < 0) {
-        JSON_ASSERT(!"jsmn_parse failed with error");
+        // JSON_ASSERT(!"jsmn_parse failed with error");
         return 1;
     }
     ctx.str = json_str;
