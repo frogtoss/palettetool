@@ -472,48 +472,6 @@ pal__int_to_str(unsigned long long val, char* buf, int len, int base)
 }
 
 static int
-pal__float_to_str(float val, char* buf, int len)
-{
-    char* p_buf = buf;
-    // routine only needs to work with non-inf, non NaN values between
-    // 0 and 1 while ignoring locale
-    PAL__ASSERT(val >= 0.0f && val <= 1.0f);
-    if (len < 4)
-        return 1;
-
-    const int PRECISION = 8;
-    int       i;
-
-    if (val == 1.0f) {
-        *p_buf++ = '1';
-        *p_buf++ = '.';
-        *p_buf++ = '0';
-        *p_buf = 0;
-        return 0;
-    }
-
-    *p_buf++ = '0';
-    *p_buf++ = '.';
-
-    for (i = 0; i < PRECISION; i++) {
-        if (p_buf - buf - 1 >= len)
-            return 1;
-
-        val *= 10.f;
-        int digit = (char)val;
-        PAL__ASSERT(digit >= 0 || digit <= 9);
-        char num = '0' + (char)digit;
-        *p_buf++ = num;
-        val -= (float)digit;
-    }
-
-    // todo: remove training zeroes up to tens for aesthetic reasons
-    *p_buf = 0;
-
-    return 0;
-}
-
-static int
 pal__strlen(const char* s)
 {
     int n = 0;
