@@ -42,6 +42,7 @@
 #include <string.h>
 #include <stdlib.h>  // for memcpy, strtoul
 #include <assert.h>
+#include <stdint.h>
 
 #include "3rdparty/ftg_palette.h"
 #include "3rdparty/jsmn.h"
@@ -529,35 +530,29 @@ parse_palette_colors_subarray(json_context_t* ctx, int* i, pal_palette_t* pal)
 }
 
 static int
-parse_palette_hints_subarray(json_context_t* ctx, int* i, pal_palette_t* pal, int palette_color_index)
+parse_palette_hints_subarray(json_context_t* ctx, int* i, pal_palette_t* pal, pal_hint_kind_t hint_kind)
 {
-    JSON_ASSERT(palette_color_index < pal->num_colors);
-
-    // expect an array of strings
+    // expect an array of color name strings
     int hints_array_end = ctx->tok[*i].end;
     if (json_match(ctx, JSMN_ARRAY, i) != 0)
         return 1;
 
     for (; !JSON_EOF && ctx->tok[*i].start < hints_array_end; (*i)++) {
-        if (json_expect(ctx, JSMN_STRING, *i) != 0)
-            return 1;
-
-        if (pal->num_hints[palette_color_index] >= PAL_MAX_HINTS) {
-            json_error(ctx, "PAL_MAX_HINTS exceeded for color", *i);
+        if (pal->num_hints[hint_kind] >= PAL_MAX_COLORS) {
+            json_error(ctx, "PAL_MAX_COLORS exceeded for hint", *i);
             return 1;
         }
 
-        // parse hint as string and turn it into a enum
-        pal_hint_kind_t hint;
-        int             len = ctx->tok[*i].end - ctx->tok[*i].start;
-        int result = pal_hint_for_string(ctx->str + ctx->tok[*i].start, len, &hint);
+        int palette_color_index;
+        int result =
+            json_token_to_palette_color_index(ctx, *i, pal, &palette_color_index);
         if (result != 0) {
-            json_error(ctx, "invalid hint", *i);
+            json_error(ctx, "hint names a color not in colors array", *i);
             return 1;
         }
 
-        // assign hint
-        pal->hints[palette_color_index][pal->num_hints[palette_color_index]++] = hint;
+        pal->hint_colors[hint_kind][pal->num_hints[hint_kind]++] =
+            (pal_u16_t)palette_color_index;
     }
 
     (*i)--;
@@ -573,22 +568,25 @@ parse_palette_hints_subobject(json_context_t* ctx, int* i, pal_palette_t* pal)
     if (json_match(ctx, JSMN_OBJECT, i) != 0)
         return 1;
 
-    // initialize all colors to zero hints
-    for (int j = 0; j < PAL_MAX_COLORS; j++) pal->num_hints[j] = 0;
+    // initialize all hint kinds to zero colors
+    for (int j = 0; j < PAL_MAX_HINTS; j++) pal->num_hints[j] = 0;
 
-    // expect string: array pairs
+    // expect hint-kind-string: array-of-color-names pairs
     while (!JSON_EOF && ctx->tok[*i].start < hints_object_end) {
-        int palette_color_index;
+        if (json_expect(ctx, JSMN_STRING, *i) != 0)
+            return 1;
 
-        int result =
-            json_token_to_palette_color_index(ctx, *i, pal, &palette_color_index);
+        pal_hint_kind_t hint_kind;
+        int             len = ctx->tok[*i].end - ctx->tok[*i].start;
+        int             result =
+            pal_hint_for_string(ctx->str + ctx->tok[*i].start, len, &hint_kind);
         if (result != 0) {
-            json_error(ctx, "hints names a color name not in colors array", *i);
+            json_error(ctx, "invalid hint kind in hints object", *i);
             return 1;
         }
 
         json_match(ctx, JSMN_STRING, i);
-        if (parse_palette_hints_subarray(ctx, i, pal, palette_color_index) != 0)
+        if (parse_palette_hints_subarray(ctx, i, pal, hint_kind) != 0)
             return 1;
         (*i)++;
     }

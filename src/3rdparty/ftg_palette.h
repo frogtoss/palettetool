@@ -1,3 +1,4 @@
+#pragma once
 /* ftg_palette  - public domain library
    no warranty implied; use at your own risk
 
@@ -53,8 +54,9 @@
    0.1  (Jan 2024)   Initial version
    0.2  (May 2025)   Colorspaces
    0.3  (Mar 2026)   Perceptive color sorting, JASC PAL import
-                     Hex floats 
-
+                     Breaking: Hex floats 
+                     Breaking: Hints contain colors
+                     Old:      Colors contained hints
    LICENSE
 
    This software is in the public domain. Where that dedication is not
@@ -205,8 +207,8 @@ typedef struct pal_palette_s {
     pal_str_t   color_names[PAL_MAX_COLORS];
     pal_color_t colors[PAL_MAX_COLORS];
 
-    pal_u16_t       num_hints[PAL_MAX_COLORS];
-    pal_hint_kind_t hints[PAL_MAX_COLORS][PAL_MAX_HINTS];
+    pal_u16_t num_hints[PAL_MAX_HINTS];
+    pal_u16_t hint_colors[PAL_MAX_HINTS][PAL_MAX_COLORS];
 
     pal_u16_t      num_gradients;
     pal_str_t      gradient_names[PAL_MAX_GRADIENTS];
@@ -670,29 +672,26 @@ pal_emit_palette_json(const pal_palette_t* pals, int num_pals, char* out_buf, in
 
         tab++;
         int total_hints = 0;
-        for (j = 0; j < pal->num_colors; j++) {
-            // ex: "red": [
-            if (pal->num_hints[j] > 0) {
-                total_hints++;
-                PAL__APPEND_TABS(tab);
-                PAL__APPEND("\"");
-                PAL__APPEND(pal->color_names[j]);
-                PAL__APPEND("\": [");
-            }
+        for (j = 0; j < HINT_MAX; j++) {
+            if (pal->num_hints[j] == 0)
+                continue;
+            total_hints++;
+            // ex: "highlight": [
+            PAL__APPEND_TABS(tab);
+            PAL__APPEND("\"");
+            PAL__APPEND(pal_string_for_hint((pal_hint_kind_t)j));
+            PAL__APPEND("\": [");
 
-            // for each color, for each hint
+            // for each color in this hint
             for (k = 0; k < pal->num_hints[j]; k++) {
                 PAL__APPEND("\"");
-                PAL__APPEND(pal_string_for_hint(pal->hints[j][k]));
+                PAL__APPEND(pal->color_names[pal->hint_colors[j][k]]);
                 PAL__APPEND("\", ");
             }
 
-            // ex: ],
-            if (pal->num_hints[j] > 0) {
-                // walk back over the trailing comma
-                PAL__WALK_BACK(2);
-                PAL__APPEND("],\n");
-            }
+            // walk back over the trailing comma
+            PAL__WALK_BACK(2);
+            PAL__APPEND("],\n");
         }
 
         // end hints
@@ -1300,7 +1299,7 @@ pal_parse_aco(const unsigned char* bytes,
     out_pal->title[0] = 0;
     out_pal->num_gradients = 0;
     out_pal->num_dither_pairs = 0;
-    for (i = 0; i < PAL_MAX_COLORS; i++) out_pal->num_hints[i] = 0;
+    for (i = 0; i < PAL_MAX_HINTS; i++) out_pal->num_hints[i] = 0;
     pal__strncpy(out_pal->color_space.name, COLOR_SPACE_SRGB, PAL_MAX_STRLEN);
     pal__strncpy(out_pal->color_space.icc_filename, ICC_SRGB, PAL_MAX_STRLEN);
     out_pal->color_space.is_linear = false;
@@ -1372,7 +1371,7 @@ pal_parse_bytes(const unsigned char* bytes,
     out_pal->title[0] = 0;
     out_pal->num_gradients = 0;
     out_pal->num_dither_pairs = 0;
-    for (i = 0; i < PAL_MAX_COLORS; i++) out_pal->num_hints[i] = 0;
+    for (i = 0; i < PAL_MAX_HINTS; i++) out_pal->num_hints[i] = 0;
     pal__palette_set_linear(out_pal);
 
     return 0;
@@ -1495,7 +1494,7 @@ pal_parse_gpl(const unsigned char* bytes,
 
     {
         int i;
-        for (i = 0; i < PAL_MAX_COLORS; i++) out_pal->num_hints[i] = 0;
+        for (i = 0; i < PAL_MAX_HINTS; i++) out_pal->num_hints[i] = 0;
     }
     pal__palette_set_srgb(out_pal);
 
@@ -1606,7 +1605,7 @@ pal_parse_jasc(const unsigned char *bytes,
     out_pal->num_dither_pairs = 0;
     {
         int i;
-        for (i = 0; i < PAL_MAX_COLORS; i++) out_pal->num_hints[i] = 0;
+        for (i = 0; i < PAL_MAX_HINTS; i++) out_pal->num_hints[i] = 0;
     }
     pal__palette_set_srgb(out_pal);
     pal__strncpy(
@@ -2013,7 +2012,7 @@ pal_init(pal_palette_t* pal)
     pal->num_gradients = 0;
     pal->num_dither_pairs = 0;
 
-    for (i = 0; i < PAL_MAX_COLORS; i++) pal->num_hints[i] = 0;
+    for (i = 0; i < PAL_MAX_HINTS; i++) pal->num_hints[i] = 0;
 }
 
 static int
