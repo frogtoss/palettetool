@@ -11,6 +11,7 @@ import re
 import sys
 import json
 import time
+import struct
 import argparse
 
 
@@ -29,17 +30,17 @@ def epoch_time_string():
     return str(int(time.time()))
 
 def read_file_into_string(file_path):
-    try:
-        with open(file_path, "rb") as f:
-            return f.read().decode('utf-8')
-    except or as e:
-        fatal("Error reading file: " + str(e))
+    with open(file_path, "rb") as f:
+        return f.read().decode('utf-8')
 
 def init_palette_doc():
     doc = {
         'palettes': [
             {
                 'title': "untitled",
+                'color_space': {
+                    'is_linear': True,
+                },
                 'source': {
                     'conversion_tool': "ftg_palette extractor.py",
                     'conversion_date': epoch_time_string(),
@@ -93,6 +94,11 @@ def channel_to_f32(val):
         return 1.0
     return val / 256.0
 
+def channel_to_hex_float32(byte):
+    f32 = channel_to_f32(byte)
+    return struct.pack('>f', f32).hex()
+
+
 def color_from_hexcolor(name, hex_str):
     color = {'name': name}
     hex_str = hex_str.lstrip('#')
@@ -102,9 +108,9 @@ def color_from_hexcolor(name, hex_str):
         fatal("todo: support hex other than 6-char.  got: " + hex_str)
 
     rgb = tuple(int(hex_str[i:i+2], 16) for i in (0, 2, 4))
-    color['red'] = channel_to_f32(rgb[0])
-    color['green'] = channel_to_f32(rgb[1])
-    color['blue'] = channel_to_f32(rgb[2])
+    color['red'] = channel_to_hex_float32(rgb[0])
+    color['green'] = channel_to_hex_float32(rgb[1])
+    color['blue'] = channel_to_hex_float32(rgb[2])
     color['alpha'] = 1.0
 
     return color
