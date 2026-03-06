@@ -570,7 +570,7 @@ pal_emit_palette_json(const pal_palette_t* pals, int num_pals, char* out_buf, in
 
         // comma separation
         if (i) {
-            PAL__APPEND(",");
+            PAL__APPEND(",\n");
         }
 
         // palette sub-document
@@ -794,8 +794,9 @@ pal_emit_palette_json(const pal_palette_t* pals, int num_pals, char* out_buf, in
         // end palette sub-document
         tab--;
         PAL__APPEND_TABS(tab);
-        PAL__APPEND("}\n");
+        PAL__APPEND("}");
     }
+    PAL__APPEND("\n");
 
     // end palettes array
     tab--;
@@ -1704,7 +1705,7 @@ const char* pal__enum_strings[HINT_MAX] = {
     "selection",    "comment",
     "string",       "keyword",
     "variable",     "operator",
-    "puncutation",  "inactive",
+    "punctuation",  "inactive",
     "function",     "method",
     "preprocessor", "type",
     "constant",     "link",
