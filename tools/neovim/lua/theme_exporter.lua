@@ -785,6 +785,341 @@ local function ranked_colors(
     return selected
 end
 
+local function correct_polarity(color, reference, dark_theme)
+    if dark_theme then
+        return luminance(color) > luminance(reference)
+    end
+    return luminance(color) < luminance(reference)
+end
+
+local function pole_blend_target(color, dark_theme, amount)
+    local red, green, blue = rgb_components(color)
+    local pole = dark_theme and 1 or 0
+    return red + (pole - red) * amount,
+        green + (pole - green) * amount,
+        blue + (pole - blue) * amount
+end
+
+local function distance_from_target(color, target_red, target_green, target_blue)
+    local red, green, blue = rgb_components(color)
+    red = red - target_red
+    green = green - target_green
+    blue = blue - target_blue
+    return math.sqrt(red * red + green * green + blue * blue)
+end
+
+local function postprocess_background_highlight(
+    hints,
+    color_values,
+    background_color,
+    dark_theme
+)
+    local target_red, target_green, target_blue =
+        pole_blend_target(background_color, dark_theme, 0.30)
+    local qualifying = {}
+    local polarity_matches = {}
+
+    for _, color in ipairs(color_values) do
+        if color ~= background_color
+            and correct_polarity(color, background_color, dark_theme)
+        then
+            local candidate = {
+                color = color,
+                distance = distance_from_target(
+                    color,
+                    target_red,
+                    target_green,
+                    target_blue
+                ),
+                contrast = contrast_ratio(color, background_color),
+            }
+            table.insert(polarity_matches, candidate)
+            if candidate.contrast >= 2.5 then
+                table.insert(qualifying, candidate)
+            end
+        end
+    end
+
+    local candidates = #qualifying > 0 and qualifying or polarity_matches
+    if #candidates == 0 then
+        return
+    end
+    table.sort(candidates, function(first, second)
+        if #qualifying == 0 and first.contrast ~= second.contrast then
+            return first.contrast > second.contrast
+        end
+        if first.distance == second.distance then
+            return first.color < second.color
+        end
+        return first.distance < second.distance
+    end)
+
+    local selected = { candidates[1].color }
+    for _, color in ipairs(hints["background highlight"]) do
+        if color ~= selected[1] and color ~= background_color then
+            table.insert(selected, color)
+            if #selected == MAX_HINT_COLORS then
+                break
+            end
+        end
+    end
+    hints["background highlight"] = selected
+end
+
+local function postprocess_bold(
+    hints,
+    color_values,
+    background_color,
+    dark_theme
+)
+    local normal_color = hints.normal[1]
+    local selected
+
+    local function is_bold_candidate(color)
+        return color ~= normal_color
+            and color_distance(color, normal_color) >= 0.12
+            and correct_polarity(color, background_color, dark_theme)
+            and contrast_ratio(color, background_color) >= 3.0
+    end
+
+    for _, color in ipairs(hints.bold) do
+        if is_bold_candidate(color) then
+            selected = color
+            break
+        end
+    end
+
+    if not selected then
+        local candidates = {}
+        for _, color in ipairs(color_values) do
+            if is_bold_candidate(color) then
+                table.insert(candidates, {
+                    color = color,
+                    score = semantic_score(
+                        color,
+                        HINT_PROFILES.bold,
+                        background_color,
+                        dark_theme
+                    ) + color_distance(color, normal_color) * 20,
+                })
+            end
+        end
+        table.sort(candidates, function(first, second)
+            if first.score == second.score then
+                return first.color < second.color
+            end
+            return first.score > second.score
+        end)
+        if #candidates > 0 then
+            selected = candidates[1].color
+        end
+    end
+
+    -- A monochrome palette may not contain a usable alternative.
+    if not selected then
+        return
+    end
+
+    local bold_colors = { selected }
+    for _, color in ipairs(hints.bold) do
+        if color ~= selected
+            and color ~= normal_color
+            and color_distance(color, selected) >= 0.12
+        then
+            table.insert(bold_colors, color)
+            if #bold_colors == MAX_HINT_COLORS then
+                break
+            end
+        end
+    end
+    hints.bold = bold_colors
+end
+
+local function append_unique_color(colors, seen, color)
+    if type(color) == "number" and not seen[color] then
+        seen[color] = true
+        table.insert(colors, color)
+    end
+end
+
+local function selection_backgrounds(
+    hints,
+    color_values,
+    highlights,
+    changed,
+    background_color
+)
+    local backgrounds = {}
+    local seen = {}
+    local visual = highlights.Visual or {}
+    if changed.Visual and changed.Visual.bg then
+        append_unique_color(backgrounds, seen, visual.bg)
+    end
+    for _, color in ipairs(hints.selection) do
+        append_unique_color(backgrounds, seen, color)
+    end
+
+    local remaining = {}
+    for _, color in ipairs(color_values) do
+        if color ~= background_color and not seen[color] then
+            table.insert(remaining, color)
+        end
+    end
+    table.sort(remaining, function(first, second)
+        local first_delta = math.abs(
+            contrast_ratio(first, background_color) - 1.8
+        )
+        local second_delta = math.abs(
+            contrast_ratio(second, background_color) - 1.8
+        )
+        if first_delta == second_delta then
+            return first < second
+        end
+        return first_delta < second_delta
+    end)
+    for _, color in ipairs(remaining) do
+        append_unique_color(backgrounds, seen, color)
+    end
+    if #backgrounds == 0 then
+        append_unique_color(backgrounds, seen, background_color)
+    end
+    return backgrounds
+end
+
+local function selection_foregrounds(
+    hints,
+    color_values,
+    highlights,
+    changed,
+    selection_background,
+    dark_theme
+)
+    local foregrounds = {}
+    local seen = {}
+    local visual = highlights.Visual or {}
+    if changed.Visual and changed.Visual.fg then
+        append_unique_color(foregrounds, seen, visual.fg)
+    end
+    append_unique_color(foregrounds, seen, hints.normal[1])
+
+    local remaining = {}
+    for _, color in ipairs(color_values) do
+        if color ~= selection_background and not seen[color] then
+            table.insert(remaining, color)
+        end
+    end
+    table.sort(remaining, function(first, second)
+        local first_contrast = contrast_ratio(first, selection_background)
+        local second_contrast = contrast_ratio(second, selection_background)
+        if first_contrast == second_contrast then
+            return first < second
+        end
+        return first_contrast > second_contrast
+    end)
+    for _, color in ipairs(remaining) do
+        if correct_polarity(color, selection_background, dark_theme) then
+            append_unique_color(foregrounds, seen, color)
+        end
+    end
+    return foregrounds
+end
+
+local function postprocess_selection(
+    hints,
+    color_values,
+    highlights,
+    changed,
+    background_color,
+    dark_theme
+)
+    local backgrounds = selection_backgrounds(
+        hints,
+        color_values,
+        highlights,
+        changed,
+        background_color
+    )
+    local best_fallback
+
+    for _, selection_background in ipairs(backgrounds) do
+        local foregrounds = selection_foregrounds(
+            hints,
+            color_values,
+            highlights,
+            changed,
+            selection_background,
+            dark_theme
+        )
+        for _, selection_foreground in ipairs(foregrounds) do
+            if selection_foreground ~= selection_background
+                and correct_polarity(
+                    selection_foreground,
+                    selection_background,
+                    dark_theme
+                )
+            then
+                local contrast = contrast_ratio(
+                    selection_foreground,
+                    selection_background
+                )
+                if contrast >= 4.5 then
+                    hints.selection = {
+                        selection_foreground,
+                        selection_background,
+                    }
+                    return
+                end
+                if not best_fallback or contrast > best_fallback.contrast then
+                    best_fallback = {
+                        foreground = selection_foreground,
+                        background = selection_background,
+                        contrast = contrast,
+                    }
+                end
+            end
+        end
+    end
+
+    if best_fallback then
+        hints.selection = {
+            best_fallback.foreground,
+            best_fallback.background,
+        }
+        return
+    end
+    error("theme does not contain two colors suitable for selection")
+end
+
+local function postprocess_relational_hints(
+    hints,
+    color_values,
+    highlights,
+    changed,
+    background_color,
+    dark_theme
+)
+    postprocess_background_highlight(
+        hints,
+        color_values,
+        background_color,
+        dark_theme
+    )
+    postprocess_bold(
+        hints,
+        color_values,
+        background_color,
+        dark_theme
+    )
+    postprocess_selection(
+        hints,
+        color_values,
+        highlights,
+        changed,
+        background_color,
+        dark_theme
+    )
+end
+
 local function build_hints(color_values, highlights, changed)
     local background_color = determine_background(color_values, highlights, changed)
     local dark_theme = luminance(background_color) < 0.5
@@ -800,6 +1135,14 @@ local function build_hints(color_values, highlights, changed)
             dark_theme
         )
     end
+    postprocess_relational_hints(
+        hints,
+        color_values,
+        highlights,
+        changed,
+        background_color,
+        dark_theme
+    )
     return hints, dark_theme
 end
 
@@ -891,6 +1234,41 @@ function M.export(path)
         title,
         expanded_path
     ))
+    return result
+end
+
+local function filename_for_theme(theme_name)
+    local filename = theme_name:gsub("%s+", "-")
+    filename = filename:gsub("[/\\]", "-")
+    if filename == "" then
+        error("active colorscheme has no usable filename")
+    end
+    return filename .. ".pal.json"
+end
+
+---Load an optional colorscheme and export it into a directory.
+---@param directory string
+---@param requested_theme? string
+---@return table result Also contains the generated filename.
+function M.export_theme(directory, requested_theme)
+    if type(directory) ~= "string" or directory == "" then
+        error("directory must be a non-empty string")
+    end
+    if requested_theme ~= nil and type(requested_theme) ~= "string" then
+        error("requested_theme must be a string or nil")
+    end
+    if requested_theme and requested_theme ~= "" then
+        vim.cmd.colorscheme(requested_theme)
+    end
+    if type(vim.g.colors_name) ~= "string" or vim.g.colors_name == "" then
+        error("no active named colorscheme to export")
+    end
+
+    local filename = filename_for_theme(vim.g.colors_name)
+    local expanded_directory = vim.fn.expand(directory)
+    local separator = expanded_directory:sub(-1) == "/" and "" or "/"
+    local result = M.export(expanded_directory .. separator .. filename)
+    result.filename = filename
     return result
 end
 

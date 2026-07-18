@@ -15,8 +15,17 @@ where the palette should be created:
 The script captures pristine Neovim colors, loads the normal configuration to
 discover its active theme, then clears and reapplies that colorscheme in
 isolation. Only colors that differ from pristine Neovim are exported, excluding
-unrelated defaults and plugin highlights. It writes `theme.pal.json` in the
-current directory, overwrites existing output, and does not write ShaDa data.
+unrelated defaults and plugin highlights. It writes `<theme-name>.pal.json` in
+the current directory, replaces spaces in the theme name with hyphens, echoes
+the generated filename, overwrites existing output, and does not write ShaDa
+data.
+
+Pass an available Neovim colorscheme name to export it instead of the configured
+current theme:
+
+```bash
+/path/to/palettetool/tools/neovim/batch_export.sh habamax
+```
 
 ## Finding themes
 
@@ -51,11 +60,21 @@ colors assigned to a hint.
 
 The first `background` color determines light or dark polarity. Foreground and
 syntax hints must contrast with that background and have the correct luminance
-direction. Background-like hints such as `selection`, `sidebar`, and `shadow`
-instead select distinguishable surface colors. Every documented hint receives
-at least one color; when a direct Neovim group is unavailable, semantic
-fallbacks favor expected colors such as red for errors, green for success,
-blue for links, and a high-contrast color for specular or cursor roles.
+direction. Every documented hint receives at least one color; when a direct
+Neovim group is unavailable, semantic fallbacks favor expected colors such as
+red for errors, green for success, blue for links, and a high-contrast color
+for specular or cursor roles.
+
+After initial ranking, relational post-processing enforces the ordered theme
+roles. The first `background highlight` color is a dim foreground readable on
+the first `background` color. It is selected near a 30% blend toward white for
+dark themes or black for light themes, with at least 2.5:1 contrast when the
+theme provides a qualifying color. `selection` contains exactly two colors:
+foreground first and background second. The pair uses explicit `Visual` colors
+when suitable and otherwise targets at least 4.5:1 contrast. These adjustments
+only select from colors already exported from the active colorscheme. The first
+`bold` color is also replaced with a readable, visually distinct alternative
+when it would otherwise match the first `normal` color.
 
 Lua callers can choose any output path directly after loading a colorscheme:
 
