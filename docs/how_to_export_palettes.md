@@ -9,11 +9,18 @@ colorscheme's highlight and terminal colors, along with a complete set of
 semantic palette hints for generating themes in other editors. It compares the
 theme with pristine Neovim so built-in and unrelated plugin colors are not
 included.
-Run its batch script from the directory where `theme.pal.json` should be
-created. It loads the theme selected by the normal Neovim configuration:
+Run its batch script from the desired output directory. It loads the theme
+selected by the normal Neovim configuration and writes
+`<theme-name>.pal.json`:
 
 ```bash
 /path/to/palettetool/tools/neovim/batch_export.sh
+```
+
+To export a different available colorscheme, pass its name to the script:
+
+```bash
+/path/to/palettetool/tools/neovim/batch_export.sh habamax
 ```
 
 Within Neovim, use `:colorscheme` followed by Tab to list available themes and
