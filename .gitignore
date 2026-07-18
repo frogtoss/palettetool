@@ -296,3 +296,4 @@ __pycache__/
 *.dSYM/
 *.su
 .DS_Store
+tools/neovim/theme.pal.json

@@ -2,6 +2,23 @@
 
 What follows is a guide to create palettes that can be used as input formats for Palette Tool using existing off the shelf tools.
 
+## Neovim themes ##
+
+The [Neovim theme exporter](../tools/neovim/README.md) extracts the active
+colorscheme's highlight and terminal colors, along with a complete set of
+semantic palette hints for generating themes in other editors. It compares the
+theme with pristine Neovim so built-in and unrelated plugin colors are not
+included.
+Run its batch script from the directory where `theme.pal.json` should be
+created. It loads the theme selected by the normal Neovim configuration:
+
+```bash
+/path/to/palettetool/tools/neovim/batch_export.sh
+```
+
+Within Neovim, use `:colorscheme` followed by Tab to list available themes and
+`:echo g:colors_name` to show the active theme.
+
 ## Lospec.com ##
 
 Lospec has a database of RGB palettes with no alpha channels.  The individual colors are unnamed.
