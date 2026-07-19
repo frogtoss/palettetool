@@ -240,6 +240,23 @@ Every palette must be an object with a non-empty string `title`. The command
 fails without creating or replacing the output file if an input is invalid or
 if any two palettes have the same title. Title comparison is case-sensitive.
 
+Pass `--merge` to allow duplicate titles. The complete palette from the
+leftmost input containing a title is kept, and later palettes with that title
+are ignored:
+
+```bash
+./tools/combine_palettes.py --merge one.pal.json two.pal.json \
+    -o combined.pal.json
+```
+
+An existing output may also be supplied as an input for an in-place merge.
+Put palettes that should overwrite existing palettes before the output file:
+
+```bash
+./tools/combine_palettes.py --merge new.pal.json combined.pal.json \
+    -o combined.pal.json
+```
+
 ## Portable Theme Hint Constraints
 
 Hints contain ordered arrays of colors. The order implies how exporters use

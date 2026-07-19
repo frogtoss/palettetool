@@ -30,6 +30,11 @@ def parse_args():
         required=True,
         help="combined output .pal.json file",
     )
+    parser.add_argument(
+        "--merge",
+        action="store_true",
+        help="keep the leftmost palette when titles conflict",
+    )
     return parser.parse_args()
 
 
@@ -73,7 +78,7 @@ def load_document(filename):
     return palettes
 
 
-def combine_documents(filenames):
+def combine_documents(filenames, merge=False):
     combined = []
     title_sources = {}
 
@@ -82,6 +87,8 @@ def combine_documents(filenames):
         for index, palette in enumerate(palettes):
             title = palette["title"]
             if title in title_sources:
+                if merge:
+                    continue
                 first_filename, first_index = title_sources[title]
                 raise PaletteDocumentError(
                     f"duplicate palette title {title!r} in {filename} at index "
@@ -134,7 +141,7 @@ def main():
     args = parse_args()
 
     try:
-        palettes = combine_documents(args.inputs)
+        palettes = combine_documents(args.inputs, merge=args.merge)
         write_document(args.output, palettes)
     except PaletteDocumentError as error:
         print(f"error: {error}", file=sys.stderr)

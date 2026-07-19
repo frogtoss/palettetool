@@ -430,12 +430,23 @@ local function terminal_colors()
     return colors
 end
 
-local function snapshot_highlights()
+local function terminal_values()
+    local values = {}
+    for index = 0, 15 do
+        local value = vim.g["terminal_color_" .. index]
+        if value ~= nil then
+            values[index] = vim.deepcopy(value)
+        end
+    end
+    return values
+end
+
+local function snapshot_highlights(definitions)
     if not vim.api.nvim_get_hl then
         error("theme_exporter requires Neovim 0.9 or newer")
     end
 
-    local definitions = vim.api.nvim_get_hl(0, {})
+    definitions = definitions or vim.api.nvim_get_hl(0, {})
     local names = vim.tbl_keys(definitions)
     table.sort(names)
 
@@ -452,21 +463,93 @@ local function snapshot_highlights()
     return names, highlights
 end
 
+local function snapshot_theme_state()
+    if not vim.api.nvim_get_hl then
+        error("theme_exporter requires Neovim 0.9 or newer")
+    end
+
+    local definitions = vim.api.nvim_get_hl(0, {})
+    local names, highlights = snapshot_highlights(definitions)
+    return {
+        colors_name = vim.g.colors_name,
+        definitions = definitions,
+        highlights = highlights,
+        names = names,
+        terminal = terminal_colors(),
+        terminal_values = terminal_values(),
+    }
+end
+
+local function clear_terminal_colors()
+    for index = 0, 15 do
+        vim.g["terminal_color_" .. index] = nil
+    end
+end
+
+local function restore_theme_state(state)
+    local current = vim.api.nvim_get_hl(0, {})
+    for name in pairs(current) do
+        vim.api.nvim_set_hl(0, name, {})
+    end
+
+    for _, name in ipairs(state.names) do
+        local definition = vim.deepcopy(state.definitions[name])
+        -- nvim_set_hl() otherwise derives cterm attributes from GUI
+        -- attributes, which can make the restored raw definition differ.
+        if definition.link == nil and definition.cterm == nil then
+            definition.cterm = {}
+        end
+        vim.api.nvim_set_hl(0, name, definition)
+    end
+
+    clear_terminal_colors()
+    for index, value in pairs(state.terminal_values) do
+        vim.g["terminal_color_" .. index] = value
+    end
+    vim.g.colors_name = state.colors_name
+end
+
+local function colorscheme_is_discoverable(theme_name)
+    for _, available_theme in ipairs(vim.fn.getcompletion("", "color")) do
+        if available_theme == theme_name then
+            return true
+        end
+    end
+    return false
+end
+
+local function snapshot_pristine_state()
+    clear_terminal_colors()
+    vim.cmd("highlight clear")
+    local _, highlights = snapshot_highlights()
+    return {
+        highlights = highlights,
+        terminal = terminal_colors(),
+    }
+end
+
 local function isolate_active_theme()
     if type(vim.g.colors_name) ~= "string" or vim.g.colors_name == "" then
         error("no active named colorscheme to export")
     end
 
     local active_theme = vim.g.colors_name
-    for index = 0, 15 do
-        vim.g["terminal_color_" .. index] = nil
+    local active = snapshot_theme_state()
+    local discoverable = colorscheme_is_discoverable(active_theme)
+
+    if not discoverable then
+        local ok, pristine_or_error = pcall(snapshot_pristine_state)
+        local restored, restore_error = pcall(restore_theme_state, active)
+        if not restored then
+            error("failed to restore active colorscheme: " .. tostring(restore_error))
+        end
+        if not ok then
+            error(pristine_or_error, 0)
+        end
+        return active_theme, pristine_or_error, active
     end
-    vim.cmd("highlight clear")
-    local _, highlights = snapshot_highlights()
-    local pristine = {
-        highlights = highlights,
-        terminal = terminal_colors(),
-    }
+
+    local pristine = snapshot_pristine_state()
 
     -- User and plugin ColorScheme autocmds can introduce colors that are not
     -- defined by the theme. The colorscheme file itself remains authoritative.
@@ -475,8 +558,17 @@ local function isolate_active_theme()
 end
 
 local function extract_theme_colors()
-    local active_theme, pristine = isolate_active_theme()
-    local names, highlights = snapshot_highlights()
+    local active_theme, pristine, active = isolate_active_theme()
+    local names, highlights
+    local current_terminal
+    if active then
+        names = active.names
+        highlights = active.highlights
+        current_terminal = active.terminal
+    else
+        names, highlights = snapshot_highlights()
+        current_terminal = terminal_colors()
+    end
     local changed = {}
     local color_seen = {}
     local color_values = {}
@@ -505,7 +597,6 @@ local function extract_theme_colors()
         end
     end
 
-    local current_terminal = terminal_colors()
     for index = 0, 15 do
         if current_terminal[index] ~= pristine.terminal[index] then
             add_color(current_terminal[index])
@@ -1257,7 +1348,12 @@ function M.export_theme(directory, requested_theme)
     if requested_theme ~= nil and type(requested_theme) ~= "string" then
         error("requested_theme must be a string or nil")
     end
-    if requested_theme and requested_theme ~= "" then
+    if requested_theme and requested_theme ~= ""
+        and not (
+            requested_theme == vim.g.colors_name
+            and not colorscheme_is_discoverable(requested_theme)
+        )
+    then
         vim.cmd.colorscheme(requested_theme)
     end
     if type(vim.g.colors_name) ~= "string" or vim.g.colors_name == "" then

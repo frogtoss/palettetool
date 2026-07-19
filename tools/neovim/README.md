@@ -12,13 +12,24 @@ where the palette should be created:
 /path/to/palettetool/tools/neovim/batch_export.sh
 ```
 
-The script captures pristine Neovim colors, loads the normal configuration to
-discover its active theme, then clears and reapplies that colorscheme in
-isolation. Only colors that differ from pristine Neovim are exported, excluding
-unrelated defaults and plugin highlights. It writes `<theme-name>.pal.json` in
-the current directory, replaces spaces in the theme name with hyphens, echoes
-the generated filename, overwrites existing output, and does not write ShaDa
-data.
+The script loads the normal configuration to discover its active theme and
+captures the active highlights and terminal colors before clearing them. If the
+theme is available through Neovim's colorscheme completion, the exporter clears
+and reapplies it in strict isolation. Reload errors are fatal. Only colors that
+differ from pristine Neovim are exported, excluding unrelated defaults and
+plugin highlights.
+
+Programmatically applied active themes are also supported. These themes set
+`g:colors_name` and highlights directly but have no discoverable
+`colors/*.vim` or `colors/*.lua` file to reload. For such a theme, the exporter
+compares its saved active state with pristine Neovim, then restores its raw
+highlight definitions, links, terminal colors, and `g:colors_name`. The active
+state is authoritative, so plugin-specific groups can be included when they
+differ from Neovim's defaults.
+
+The exporter writes `<theme-name>.pal.json` in the current directory, replaces
+spaces in the theme name with hyphens, echoes the generated filename,
+overwrites existing output, and does not write ShaDa data.
 
 Pass an available Neovim colorscheme name to export it instead of the configured
 current theme:
@@ -26,6 +37,12 @@ current theme:
 ```bash
 /path/to/palettetool/tools/neovim/batch_export.sh habamax
 ```
+
+The active programmatic theme can also be passed explicitly, for example
+`batch_export.sh omarchy` while Omarchy is active. An inactive programmatic
+theme cannot be selected by name because Neovim has no colorscheme file with
+which to load it; requesting one fails in the same way as any unavailable
+colorscheme.
 
 ## Finding themes
 
